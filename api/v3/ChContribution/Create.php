@@ -9,7 +9,7 @@ use CRM_Chfunds_ExtensionUtil as E;
  * @return void
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC/API+Architecture+Standards
  */
-function _civicrm_api3_ch_contribution_Create_spec(&$params) {
+function _civicrm_api3_c_h_contribution_Create_spec(&$params) {
   $params['contact_id']['api.required'] = 1;
   $params['total_amount']['api.required'] = 1;
   $params['payment_instrument_id']['api.aliases'] = ['payment_instrument'];
@@ -91,7 +91,7 @@ function _civicrm_api3_ch_contribution_Create_spec(&$params) {
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */
-function civicrm_api3_ch_contribution_Create($params) {
+function civicrm_api3_c_h_contribution_Create($params) {
   $chFund = CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
   $params['financial_type_id'] = E::getFinancialTypeByCHFund($params['ch_fund']);
   return civicrm_api3('Contribution', 'create', $params);
