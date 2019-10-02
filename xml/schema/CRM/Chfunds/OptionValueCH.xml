@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<table>
+  <base>CRM/Chfunds</base>
+  <class>OptionValueCH</class>
+  <name>civicrm_option_value_ch</name>
+  <comment>FIXME</comment>
+  <add>5.18</add>
+  <log>true</log>
+
+  <field>
+    <name>id</name>
+    <type>int unsigned</type>
+    <required>true</required>
+    <comment>Unique OptionValueCH ID</comment>
+    <add>5.18</add>
+  </field>
+  <primaryKey>
+    <name>id</name>
+    <autoincrement>true</autoincrement>
+  </primaryKey>
+
+  <field>
+    <name>option_group_id</name>
+    <type>int unsigned</type>
+    <comment>FK to Option Group</comment>
+    <add>5.18</add>
+  </field>
+  <foreignKey>
+    <name>option_group_id</name>
+    <table>civicrm_option_group</table>
+    <key>id</key>
+    <add>4.4</add>
+    <onDelete>CASCADE</onDelete>
+  </foreignKey>
+  <field>
+    <name>value</name>
+    <title>Value of CH Fund</title>
+    <type>varchar</type>
+    <length>255</length>
+    <import>true</import>
+    <add>5.18</add>
+  </field>
+  <field>
+    <name>financial_type_id</name>
+    <type>int unsigned</type>
+    <comment>Foreign key to civicrm_financial_type</comment>
+    <add>5.18</add>
+  </field>
+  <foreignKey>
+    <name>financial_type_id</name>
+    <table>civicrm_financial_type</table>
+    <key>id</key>
+    <add>5.18</add>
+    <onDelete>CASCADE</onDelete>
+  </foreignKey>
+  <field>
+    <name>is_enabled_in_ch</name>
+    <title>Is Enabled on CH</title>
+    <type>boolean</type>
+    <default>0</default>
+    <import>true</import>
+    <add>5.18</add>
+  </field>
+</table>
