@@ -7,6 +7,7 @@ return array(
     'params' => array(
       'version' => 3,
       'title' => 'CH Fund',
+      'name' => 'ch_fund',
       "data_type" => "String",
       'description' => '',
       'is_active' => 1,

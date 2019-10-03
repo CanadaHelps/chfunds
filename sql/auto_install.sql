@@ -85,10 +85,11 @@ CREATE TABLE `civicrm_option_value_ch` (
      `option_group_id` int unsigned    COMMENT 'FK to Option Group',
      `value` varchar(255) COLLATE utf8_unicode_ci NOT NULL COMMENT 'Unique key with option group of the CH Fund in civicrm_option_value table. Is the imported ID from CH',
      `financial_type_id` int unsigned    COMMENT 'Foreign key to civicrm_financial_type',
-     `is_enabled_in_ch` tinyint   DEFAULT 0  
+     `is_enabled_in_ch` tinyint   DEFAULT 0
 ,
-        PRIMARY KEY (`id`)
-
-
-,          CONSTRAINT FK_civicrm_option_value_ch_option_group_id FOREIGN KEY (`option_group_id`) REFERENCES `civicrm_option_group`(`id`) ON DELETE CASCADE,          CONSTRAINT FK_civicrm_option_value_ch_financial_type_id FOREIGN KEY (`financial_type_id`) REFERENCES `civicrm_financial_type`(`id`) ON DELETE CASCADE
+        PRIMARY KEY (`id`),
+        KEY `index_option_group_id_value` (`value`(128),`option_group_id`),
+        KEY `FK_civicrm_option_value_option_group_id` (`option_group_id`),
+        CONSTRAINT FK_civicrm_option_value_ch_option_group_id FOREIGN KEY (`option_group_id`) REFERENCES `civicrm_option_group`(`id`) ON DELETE CASCADE,
+        CONSTRAINT FK_civicrm_option_value_ch_financial_type_id FOREIGN KEY (`financial_type_id`) REFERENCES `civicrm_financial_type`(`id`) ON DELETE CASCADE
 )    ;

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/chfunds</path>
+    <page_callback>CRM_Chfunds_Form_CHFunds</page_callback>
+    <title>CHFunds</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>

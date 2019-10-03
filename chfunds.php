@@ -114,6 +114,126 @@ function chfunds_civicrm_angularModules(&$angularModules) {
   _chfunds_civix_civicrm_angularModules($angularModules);
 }
 
+function chfunds_civicrm_apiWrappers(&$wrappers, $apiRequest) {
+  if ($apiRequest['entity'] == 'OptionValue') {
+    if ($apiRequest['action'] == 'create') {
+      $wrappers[] = new CRM_OptionValue_CreateAPIWrapper();
+    }
+    elseif ($apiRequest['action'] == 'delete') {
+      $wrappers[] = new CRM_OptionValue_DeleteAPIWrapper();
+    }
+  }
+}
+
+function chfunds_civicrm_pageRun(&$page) {
+  if (get_class($page) == 'CRM_Admin_Page_Options' &&
+    CRM_Utils_Array::value('gid', $_GET) == civicrm_api3('OptionGroup', 'getvalue', ['name' => 'ch_fund', 'return' => 'id'])
+  ) {
+    $rows = CRM_Core_Smarty::singleton()->get_template_vars('rows');
+    CRM_Financial_BAO_FinancialType::getAvailableFinancialTypes($financialTypes);
+    $count = 1;
+    $funds = [];
+    foreach ($rows as $id => $row) {
+      $fundID = _getDefaultOptionValueCH($id)['financial_type_id'];
+      $funds[$count] = CRM_Utils_Array::value($fundID, $financialTypes, '');
+      $count++;
+    }
+    $page->assign('funds', json_encode($funds));
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => "CRM/Chfunds/CHFundOptionPage.tpl",
+    ));
+  }
+  elseif (get_class($page) == 'CRM_Financial_Page_FinancialType') {
+    $rows = CRM_Core_Smarty::singleton()->get_template_vars('rows');
+    $count = 1;
+    $chFundLinks = $chFunds = [];
+    $chFundsByFinancialType = _getCHFundsByFinancialType();
+    foreach ($rows as $id => $row) {
+      $chFundLinks[$count] = CRM_Utils_System::url('civicrm/chfunds', 'reset=1&financial_type_id=' . $row['id']);
+      $chFunds[$count] = CRM_Utils_Array::value($id, $chFundsByFinancialType, '');
+      $count++;
+    }
+    $page->assign('chFundLinks', json_encode($chFundLinks));
+    $page->assign('chFunds', json_encode($chFunds));
+
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => "CRM/Chfunds/CHFundFinancialTypePage.tpl",
+    ));
+  }
+
+}
+
+function chfunds_civicrm_buildForm($formName, &$form) {
+  if ($formName == 'CRM_Admin_Form_Options' && $form->getVar('_gName') == 'ch_fund' && !($form->_action & CRM_Core_Action::DELETE)) {
+    CRM_Financial_BAO_FinancialType::getAvailableFinancialTypes($financialTypes, $form->_action);
+    $form->add('select', 'financial_type_id',
+      ts('Fund'),
+      ['' => ts('- select -')] + $financialTypes,
+      TRUE
+    );
+    $enabled = $form->add('checkbox', 'is_active', ts('Enabled?'));
+    $enabled->freeze();
+
+    $form->addYesNo('is_enabled_in_ch', ts('Enabled in CanadaHelps'), FALSE, TRUE);
+    CRM_Core_Region::instance('page-body')->add(array(
+      'template' => "CRM/Chfunds/AddCHFund.tpl",
+    ));
+
+    if ($id = $form->getVar('_id')) {
+      $defaults = _getDefaultOptionValueCH($id);
+      $form->setDefaults($defaults);
+    }
+  }
+}
+
+function chfunds_civicrm_postProcess($formName, &$form) {
+  if ($formName == 'CRM_Admin_Form_Options' && $form->getVar('_gName') == 'ch_fund') {
+    $params = $form->exportValues();
+
+    $optionValueCHID = NULL;
+    if ($id = $form->getVar('_id')) {
+      $optionValueCHID = _getDefaultOptionValueCH($id)['id'];
+    }
+
+    civicrm_api3('OptionValueCH', 'create', [
+      'id' => $optionValueCHID,
+      'option_group_id' => $form->getVar('_gid'),
+      'value' => $params['value'],
+      'financial_type_id' => $params['financial_type_id'],
+      'is_enabled_in_ch' => $params['is_enabled_in_ch'],
+    ]);
+  }
+}
+
+function _getDefaultOptionValueCH($optionValueID) {
+  $params = ['value' => civicrm_api3('OptionValue', 'getvalue', ['id' => $optionValueID, 'return' => 'value'])];
+  CRM_Chfunds_BAO_OptionValueCH::retrieve($params, $defaults);
+
+  return $defaults;
+}
+
+function _getCHFundsByFinancialType() {
+  $optionValueCHFunds = civicrm_api3('OptionValueCH', 'get', ['options' => ['limit' => 0]])['values'];
+  $CHFunds = [];
+
+  foreach (civicrm_api3('OptionValue', 'get', ['option_group_id' => 'ch_fund'])['values'] as $chFund) {
+    $CHFunds[$chFund['value']] = $chFund['label'];
+  }
+  $result = [];
+  foreach ($optionValueCHFunds as $optionValueCHFund) {
+    if (!empty($CHFunds[$optionValueCHFund['value']])) {
+      $result[$optionValueCHFund['financial_type_id']][] = $CHFunds[$optionValueCHFund['value']];
+    }
+  }
+
+  foreach ($result as $k => $v) {
+    $result[$k] = implode(', ', $v);
+  }
+
+  return $result;
+}
+
+
 /**
  * Implements hook_civicrm_alterSettingsFolders().
  *
