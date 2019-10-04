@@ -1,6 +1,7 @@
 <?php
 
 require_once 'chfunds.civix.php';
+require_once 'chfunds.constants.php';
 use CRM_Chfunds_ExtensionUtil as E;
 
 /**
@@ -183,6 +184,22 @@ function chfunds_civicrm_buildForm($formName, &$form) {
       $defaults = _getDefaultOptionValueCH($id);
       $form->setDefaults($defaults);
     }
+  }
+  elseif ($formName == 'CRM_Contribute_Form_Contribution' && ($form->_action & CRM_Core_Action::UPDATE)) {
+    $selector = 'custom_' . CH_FUND_CF_ID . '_' . civicrm_api3('Contribution', 'getcount', [
+      'contact_id' => $form->_contactID,
+      'id' => ['<=' => $form->_id],
+      'custom_' . CH_FUND_CF_ID => ['IS NOT NULL' => 1]]) . '-row';
+    CRM_Core_Resources::singleton()->addScript("
+      CRM.$(function($) {
+        $( document ).ajaxComplete(function(event, xhr, settings) {
+          var urlParts = settings.url.split('&');
+          if (urlParts[1].includes('subType=') && urlParts[0].includes('civicrm/custom')) {
+            $('tr.$selector').insertAfter('tr.crm-contribution-form-block-financial_type_id');
+          }
+         });
+       });
+    ");
   }
 }
 
