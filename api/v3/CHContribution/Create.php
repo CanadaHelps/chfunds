@@ -94,5 +94,6 @@ function _civicrm_api3_c_h_contribution_Create_spec(&$params) {
 function civicrm_api3_c_h_contribution_Create($params) {
   $chFund = CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
   $params['financial_type_id'] = E::getFinancialTypeByCHFund($params['ch_fund']);
+  $params['custom_' . E::getCHFundCustomID()] = $chFund;
   return civicrm_api3('Contribution', 'create', $params);
 }

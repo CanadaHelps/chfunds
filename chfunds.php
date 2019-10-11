@@ -134,7 +134,7 @@ function chfunds_civicrm_pageRun(&$page) {
     $count = 1;
     $funds = [];
     foreach ($rows as $id => $row) {
-      $fundID = _getDefaultOptionValueCH($id)['financial_type_id'];
+      $fundID = E::getDefaultOptionValueCH($id)['financial_type_id'];
       $funds[$count] = CRM_Utils_Array::value($fundID, $financialTypes, '');
       $count++;
     }
@@ -147,7 +147,7 @@ function chfunds_civicrm_pageRun(&$page) {
     $rows = CRM_Core_Smarty::singleton()->get_template_vars('rows');
     $count = 1;
     $chFundLinks = $chFunds = [];
-    $chFundsByFinancialType = _getCHFundsByFinancialType();
+    $chFundsByFinancialType = E::getCHFundsByFinancialType();
     foreach ($rows as $id => $row) {
       $chFundLinks[$count] = CRM_Utils_System::url('civicrm/chfunds', 'reset=1&financial_type_id=' . $row['id']);
       $chFunds[$count] = CRM_Utils_Array::value($id, $chFundsByFinancialType, '');
@@ -180,7 +180,7 @@ function chfunds_civicrm_buildForm($formName, &$form) {
     ));
 
     if ($id = $form->getVar('_id')) {
-      $defaults = _getDefaultOptionValueCH($id);
+      $defaults = E::getDefaultOptionValueCH($id);
       $form->setDefaults($defaults);
     }
   }
@@ -209,7 +209,7 @@ function chfunds_civicrm_postProcess($formName, &$form) {
 
     $optionValueCHID = NULL;
     if ($id = $form->getVar('_id')) {
-      $optionValueCHID = _getDefaultOptionValueCH($id)['id'];
+      $optionValueCHID = E::getDefaultOptionValueCH($id)['id'];
     }
 
     civicrm_api3('OptionValueCH', 'create', [
@@ -221,35 +221,6 @@ function chfunds_civicrm_postProcess($formName, &$form) {
     ]);
   }
 }
-
-function _getDefaultOptionValueCH($optionValueID) {
-  $params = ['value' => civicrm_api3('OptionValue', 'getvalue', ['id' => $optionValueID, 'return' => 'value'])];
-  CRM_Chfunds_BAO_OptionValueCH::retrieve($params, $defaults);
-
-  return $defaults;
-}
-
-function _getCHFundsByFinancialType() {
-  $optionValueCHFunds = civicrm_api3('OptionValueCH', 'get', ['options' => ['limit' => 0]])['values'];
-  $CHFunds = [];
-
-  foreach (civicrm_api3('OptionValue', 'get', ['option_group_id' => 'ch_fund'])['values'] as $chFund) {
-    $CHFunds[$chFund['value']] = $chFund['label'];
-  }
-  $result = [];
-  foreach ($optionValueCHFunds as $optionValueCHFund) {
-    if (!empty($CHFunds[$optionValueCHFund['value']])) {
-      $result[$optionValueCHFund['financial_type_id']][] = $CHFunds[$optionValueCHFund['value']];
-    }
-  }
-
-  foreach ($result as $k => $v) {
-    $result[$k] = implode(', ', $v);
-  }
-
-  return $result;
-}
-
 
 /**
  * Implements hook_civicrm_alterSettingsFolders().

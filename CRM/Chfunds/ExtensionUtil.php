@@ -13,7 +13,7 @@ public static function getFinancialTypeByCHFund($chFundID) {
 }
 
 
-public static function getCHFundCustomID($chFundID) {
+public static function getCHFundCustomID() {
   return civicrm_api3('CustomField', 'getvalue', ['name' => 'Fund', 'return' => 'id']);
 }
 
@@ -22,6 +22,27 @@ public static function getDefaultOptionValueCH($optionValueID) {
   CRM_Chfunds_BAO_OptionValueCH::retrieve($params, $defaults);
 
   return $defaults;
+}
+
+public static function getCHFundsByFinancialType() {
+  $optionValueCHFunds = civicrm_api3('OptionValueCH', 'get', ['options' => ['limit' => 0]])['values'];
+  $CHFunds = [];
+
+  foreach (civicrm_api3('OptionValue', 'get', ['option_group_id' => 'ch_fund'])['values'] as $chFund) {
+    $CHFunds[$chFund['value']] = $chFund['label'];
+  }
+  $result = [];
+  foreach ($optionValueCHFunds as $optionValueCHFund) {
+    if (!empty($CHFunds[$optionValueCHFund['value']])) {
+      $result[$optionValueCHFund['financial_type_id']][] = $CHFunds[$optionValueCHFund['value']];
+    }
+  }
+
+  foreach ($result as $k => $v) {
+    $result[$k] = implode(', ', $v);
+  }
+
+  return $result;
 }
 
 
