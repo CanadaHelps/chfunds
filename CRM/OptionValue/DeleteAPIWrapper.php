@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../chfunds.constants.php';
+use CRM_Chfunds_ExtensionUtil as E;
 
 class CRM_OptionValue_DeleteAPIWrapper implements API_Wrapper {
   /**
@@ -8,9 +8,10 @@ class CRM_OptionValue_DeleteAPIWrapper implements API_Wrapper {
   public function fromApiInput($apiRequest) {
     if ($apiRequest['entity'] == 'OptionValue' && !empty($apiRequest['params']['id'])) {
       $optionValue = civicrm_api3('OptionValue', 'getsingle', ['id' => $apiRequest['params']['id']]);
+      $fundCustomFieldID = E::getCHFundCustomID();
       if (civicrm_api3('OptionGroup', 'getvalue', ['id' => $optionValue['option_group_id'], 'return' => 'name']) == 'ch_fund') {
         $count = civicrm_api3('Contribution', 'getcount', [
-          'custom_' . CH_FUND_CF_ID => $optionValue['value'],
+          'custom_' . $fundCustomFieldID => $optionValue['value'],
         ]);
         if ($count > 0) {
           throw new API_Exception("CH Fund cannot be deleted as it linked with {$count} contribution(s).");

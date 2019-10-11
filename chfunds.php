@@ -1,7 +1,6 @@
 <?php
 
 require_once 'chfunds.civix.php';
-require_once 'chfunds.constants.php';
 use CRM_Chfunds_ExtensionUtil as E;
 
 /**
@@ -186,10 +185,11 @@ function chfunds_civicrm_buildForm($formName, &$form) {
     }
   }
   elseif ($formName == 'CRM_Contribute_Form_Contribution' && ($form->_action & CRM_Core_Action::UPDATE)) {
-    $selector = 'custom_' . CH_FUND_CF_ID . '_' . civicrm_api3('Contribution', 'getcount', [
+    $fundCustomFieldID = civicrm_api3('CustomField', 'getvalue', ['name' => 'Fund', 'return' => 'id']);
+    $selector = 'custom_' . $fundCustomFieldID . '_' . civicrm_api3('Contribution', 'getcount', [
       'contact_id' => $form->_contactID,
       'id' => ['<=' => $form->_id],
-      'custom_' . CH_FUND_CF_ID => ['IS NOT NULL' => 1]]) . '-row';
+      'custom_' . $fundCustomFieldID => ['IS NOT NULL' => 1]]) . '-row';
     CRM_Core_Resources::singleton()->addScript("
       CRM.$(function($) {
         $( document ).ajaxComplete(function(event, xhr, settings) {

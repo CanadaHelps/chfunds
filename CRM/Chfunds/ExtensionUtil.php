@@ -12,6 +12,11 @@ public static function getFinancialTypeByCHFund($chFundID) {
   return CRM_Utils_Array::value('financial_type_id', $values);
 }
 
+
+public static function getCHFundCustomID($chFundID) {
+  return civicrm_api3('CustomField', 'getvalue', ['name' => 'Fund', 'return' => 'id']);
+}
+
 public static function getDefaultOptionValueCH($optionValueID) {
   $params = ['value' => civicrm_api3('OptionValue', 'getvalue', ['id' => $optionValueID, 'return' => 'value'])];
   CRM_Chfunds_BAO_OptionValueCH::retrieve($params, $defaults);
