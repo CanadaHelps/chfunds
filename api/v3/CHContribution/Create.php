@@ -32,7 +32,7 @@ function _civicrm_api3_c_h_contribution_Create_spec(&$params) {
     // field is called payment processor - not payment processor id but can only be one id so
     // it seems likely someone will fix it up one day to be more consistent - lets alias it from the start
     'api.aliases' => ['ch_fund_id'],
-    'type' => CRM_Utils_Type::T_INT,
+    'type' => CRM_Utils_Type::T_STRING,
   ];
   $params['note'] = [
     'name' => 'note',
