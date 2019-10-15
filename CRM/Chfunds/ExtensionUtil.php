@@ -63,7 +63,6 @@ public static function updateContributions($params, $CHFund, $entity = 'Contribu
     'ch_fund' => $CHFund,
     'options' => ['limit' => 0],
   ])['values'];
-  CRM_Core_Error::debug_var('cc', $contributions);
   foreach ($contributions as $id => $value) {
     civicrm_api3($entity, 'create', array_merge(
         ['id' => $value['id']],
