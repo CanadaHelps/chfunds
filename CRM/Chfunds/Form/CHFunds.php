@@ -11,9 +11,12 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
   protected $_financial_type_id;
   protected $_chFunds;
 
+  public function preProcess() {
+    $this->_financial_type_id = CRM_Utils_Request::retrieve('financial_type_id', 'Positive', $this);
+  }
+
   public function buildQuickForm() {
     parent::buildQuickForm();
-    $this->_financial_type_id = CRM_Utils_Request::retrieve('financial_type_id', 'Positive');
 
     $financialType = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_FinancialType', $this->_financial_type_id, 'name');
     CRM_Utils_System::setTitle(ts('%1 - CH Funds', [1 => $financialType]));
@@ -26,6 +29,8 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
       $this->addElement('checkbox', "ch_funds[$chFund]", NULL, $label);
     }
 
+    $this->addFormRule(array(__CLASS__, 'formRule'), $this);
+
     $this->addButtons([
       [
         'type' => 'upload',
@@ -37,6 +42,19 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
         'name' => ts('Cancel'),
       ],
     ]);
+  }
+
+  public static function formRule($fields, $files, $self) {
+    $errors = [];
+    $mappedValues = E::getMappedItem('value', "WHERE financial_type_id <> $self->_financial_type_id ");
+    foreach (array_keys($fields['ch_funds']) as $fundID) {
+      if (in_array($fundID, $mappedValues)) {
+        $errors['_qf_default'] = ts('The CH Fund - %1 is already used for other financial type. Please choose any other option.', [1 => $fundID]);
+        break;
+      }
+    }
+
+    return $errors;
   }
 
   /**

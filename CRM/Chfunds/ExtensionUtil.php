@@ -45,5 +45,32 @@ public static function getCHFundsByFinancialType() {
   return $result;
 }
 
+public static function getMappedItem($column, $condition = '') {
+  return explode(',', CRM_Core_DAO::singleValueQuery("SELECT GROUP_CONCAT(DISTINCT {$column}) FROM civicrm_option_value_ch {$condition} "));
+}
+
+public static function filterFinancialTypes(&$financialTypes, $condition) {
+  $mappedFinancialTypes = self::getMappedItem('financial_type_id', $condition);
+  foreach ($financialTypes as $key => $label) {
+    if (in_array($key, $mappedFinancialTypes)) {
+      unset($financialTypes[$key]);
+    }
+  }
+}
+
+public static function updateContributions($params, $CHFund, $entity = 'Contribution') {
+  $contributions = civicrm_api3('CHContribution', 'get', [
+    'ch_fund' => $CHFund,
+    'options' => ['limit' => 0],
+  ])['values'];
+  CRM_Core_Error::debug_var('cc', $contributions);
+  foreach ($contributions as $id => $value) {
+    civicrm_api3($entity, 'create', array_merge(
+        ['id' => $value['id']],
+        $params
+      )
+    );
+  }
+}
 
 }

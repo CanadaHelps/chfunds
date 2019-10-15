@@ -166,6 +166,8 @@ function chfunds_civicrm_pageRun(&$page) {
 function chfunds_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_Admin_Form_Options' && $form->getVar('_gName') == 'ch_fund' && !($form->_action & CRM_Core_Action::DELETE)) {
     CRM_Financial_BAO_FinancialType::getAvailableFinancialTypes($financialTypes, $form->_action);
+    $condition = empty($form->getVar('_id')) ? '' : "WHERE value <> '" . civicrm_api3('OptionValue', 'getvalue', ['id' => $form->getVar('_id'), 'return' => 'value']) . "'";
+    E::filterFinancialTypes($financialTypes, $condition);
     $form->add('select', 'financial_type_id',
       ts('Fund'),
       ['' => ts('- select -')] + $financialTypes,
@@ -219,6 +221,21 @@ function chfunds_civicrm_postProcess($formName, &$form) {
       'financial_type_id' => $params['financial_type_id'],
       'is_enabled_in_ch' => $params['is_enabled_in_ch'],
     ]);
+  }
+}
+
+function chfunds_civicrm_pre($op, $entityName, $objectID, &$params) {
+  if ('edit' == $op && $entityName == 'OptionValueCH') {
+    $oldFinancialTypeID = CRM_Core_DAO::singleValueQuery("SELECT financial_type_id FROM civicrm_option_value_ch WHERE id = $objectID LIMIT 1");
+    $dao = new CRM_Chfunds_DAO_OptionValueCH();
+    $dao->id = $objectID;
+    $dao->find(TRUE);
+    if (!empty($params['financial_type_id']) && $dao->financial_type_id != $params['financial_type_id']) {
+      E::updateContributions(['financial_type_id' => $params['financial_type_id']], $dao->value);
+    }
+    elseif (!empty($params['value']) && $dao->value != $params['value']) {
+      E::updateContributions(['ch_fund' => $params['value']], $dao->value, 'CHContribution');
+    }
   }
 }
 
