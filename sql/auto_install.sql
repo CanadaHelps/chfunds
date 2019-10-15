@@ -88,6 +88,7 @@ CREATE TABLE `civicrm_option_value_ch` (
      `is_enabled_in_ch` tinyint   DEFAULT 0
 ,
         PRIMARY KEY (`id`),
+        UNIQUE KEY `UI_fund_ch_fund` (`financial_type_id`,`value`),
         KEY `index_option_group_id_value` (`value`(128),`option_group_id`),
         KEY `FK_civicrm_option_value_option_group_id` (`option_group_id`),
         CONSTRAINT FK_civicrm_option_value_ch_option_group_id FOREIGN KEY (`option_group_id`) REFERENCES `civicrm_option_group`(`id`) ON DELETE CASCADE,
