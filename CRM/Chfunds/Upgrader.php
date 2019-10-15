@@ -6,6 +6,12 @@ use CRM_Chfunds_ExtensionUtil as E;
  */
 class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
 
+  public function upgrade_1100() {
+    $this->ctx->log->info('Applying update 1.1');
+    CRM_Core_DAO::executeQuery('ALTER TABLE civicrm_option_value_ch ADD CONSTRAINT UI_fund_ch_fund UNIQUE KEY `UI_fund_ch_fund` (`financial_type_id`,`value`)');
+    return TRUE;
+  }
+
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
 
