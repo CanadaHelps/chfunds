@@ -22,7 +22,6 @@ function _civicrm_api3_c_h_contribution_Get_spec(&$params) {
   $params['contact_id']['api.aliases'] = ['contribution_contact_id'];
   unset($params['contribution_contact_id']);
   $params['ch_fund'] = [
-    'api.required' => 1,
     'name' => 'ch_fund',
     'title' => 'CH Fund',
     'description' => 'Value of CH Fund used to fetch corresponding financial type',
@@ -44,7 +43,9 @@ function _civicrm_api3_c_h_contribution_Get_spec(&$params) {
  */
 function civicrm_api3_c_h_contribution_Get($params) {
   $chFund = CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
-  $params['financial_type_id'] = E::getFinancialTypeByCHFund($params['ch_fund']);
-  $params['custom_' . E::getCHFundCustomID()] = $chFund;
+  if ($chFund) {
+    $params['financial_type_id'] = E::getFinancialTypeByCHFund($chFund);
+    $params['custom_' . E::getCHFundCustomID()] = $chFund;
+  }
   return civicrm_api3('Contribution', 'get', $params);
 }
