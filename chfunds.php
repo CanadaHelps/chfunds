@@ -154,7 +154,7 @@ function chfunds_civicrm_pageRun(&$page) {
       $count++;
     }
     $page->assign('chFundLinks', json_encode($chFundLinks));
-    $page->assign('chFunds', json_encode($chFunds));
+    $page->assign('chFunds', str_replace("'", "\'", json_encode($chFunds)));
 
     CRM_Core_Region::instance('page-body')->add(array(
       'template' => "CRM/Chfunds/CHFundFinancialTypePage.tpl",

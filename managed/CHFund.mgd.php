@@ -2,7 +2,7 @@
 return array(
   array(
     'module' => 'biz.jmaconsulting.chfunds',
-    'name' => 'CH Fund',
+    'name' => 'ch_fund',
     'entity' => 'OptionGroup',
     'params' => array(
       'version' => 3,
