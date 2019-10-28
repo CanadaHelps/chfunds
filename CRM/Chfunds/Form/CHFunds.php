@@ -20,7 +20,7 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
 
     $financialType = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_FinancialType', $this->_financial_type_id, 'name');
     CRM_Utils_System::setTitle(ts('%1 - CH Funds', [1 => $financialType]));
-    $optionValues = civicrm_api3('OptionValue', 'get', ['option_group_id' => 'ch_fund'], 'options' => ['limit' => 0])['values'];
+    $optionValues = civicrm_api3('OptionValue', 'get', ['option_group_id' => 'ch_fund', 'options' => ['limit' => 0]])['values'];
     $chFunds = [];
     foreach ($optionValues as $value) {
       $chFunds[$value['value']] = $value['label'];
