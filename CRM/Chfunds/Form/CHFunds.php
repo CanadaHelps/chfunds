@@ -89,6 +89,7 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
       }
     }
 
+    $deletedOptionValueCHID = [];
     foreach ($this->_chFunds as $chFund) {
       if (!in_array($chFund, $chFundSubmittedValues)) {
         $result = civicrm_api3('OptionValueCH', 'get', [
@@ -96,8 +97,11 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
           'value' => $chFund,
           'sequential' => 1,
         ])['values'][0];
-        civicrm_api3('OptionValueCH', 'delete', ['id' => $result['id']]);
+        $deletedOptionValueCHID[] = $result['id'];
       }
+    }
+    if (!empty($deletedOptionValueCHID)) {
+      CRM_Core_DAO::executeQuery(sprintf("DELETE FROM civicrm_option_value_ch WHERE id IN (%s) ", implode(", ", $deletedOptionValueCHID)));
     }
 
     parent::postProcess();
