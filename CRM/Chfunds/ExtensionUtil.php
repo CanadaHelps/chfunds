@@ -28,7 +28,7 @@ public static function getCHFundsByFinancialType() {
   $optionValueCHFunds = civicrm_api3('OptionValueCH', 'get', ['options' => ['limit' => 0]])['values'];
   $CHFunds = [];
 
-  foreach (civicrm_api3('OptionValue', 'get', ['option_group_id' => 'ch_fund'])['values'] as $chFund) {
+  foreach (civicrm_api3('OptionValue', 'get', ['option_group_id' => 'ch_fund', 'options' => ['limit' => 0]])['values'] as $chFund) {
     $CHFunds[$chFund['value']] = $chFund['label'];
   }
   $result = [];
