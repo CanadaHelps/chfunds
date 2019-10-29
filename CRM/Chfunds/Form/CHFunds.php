@@ -64,6 +64,7 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
     $defaults = $statusVals = [];
     $values = civicrm_api3('OptionValueCH', 'get', [
       'financial_type_id' => $this->_financial_type_id,
+      'options' => ['limit' => 0],
     ])['values'];
     foreach ($values as $value) {
       $defaults['ch_funds'][$value['value']] = 1;
