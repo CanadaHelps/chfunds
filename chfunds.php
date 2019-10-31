@@ -385,13 +385,16 @@ function _restorCHOption() {
   ["Fund Name","CH+2"                                              ],
   ];
 
-  foreach ($chOptions[0] as $chOption) {
-    civicrm_api3('OptionValue', 'create', [
+  $id = civicrm_api3('OptionGroup', 'getvalue', ['name' => 'ch_fund',  'return'  => 'id']);
+  foreach ($chOptions as $chOption) {
+    $params = [
       'label' => $chOption[0],
       'value' => $chOption[1],
-      'option_group_id' => 'ch_fund',
+      'option_group_id' => $id,
       'is_active' => 1,
-    ]);
+      'is_reserved' => 1,
+    ];
+    civicrm_api3('OptionValue', 'create', $params);
   }
 }
 
