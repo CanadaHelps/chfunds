@@ -3,6 +3,7 @@ return array(
   array(
     'module' => 'biz.jmaconsulting.chfunds',
     'name' => 'ch_fund',
+    'update' => 'never',
     'entity' => 'OptionGroup',
     'params' => array(
       'version' => 3,

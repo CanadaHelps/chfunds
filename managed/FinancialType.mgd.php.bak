@@ -3,6 +3,7 @@ return array(
   array(
     'module' => 'biz.jmaconsulting.chfunds',
     'name' => 'Unassigned CH Fund',
+    'update' => 'never',
     'entity' => 'FinancialType',
     'params' => array(
       'version' => 3,
