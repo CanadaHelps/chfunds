@@ -225,7 +225,7 @@ function chfunds_civicrm_postProcess($formName, &$form) {
 function chfunds_civicrm_post($op, $entityName, $objectID, &$object) {
   if ($entityName == 'OptionValueCH' && in_array($op, ['create', 'edit']) && !empty($object->value)) {
     $contributions = civicrm_api3('Contribution', 'get', [
-      'custom_' . E::getCHFundCustomID() => ['LIKE' => "%$object->value%"],
+      'custom_' . E::getCHFundCustomID() => $object->value,
       'options' => ['limit' => 0],
       "return" => ["id", "financial_type_id"],
     ])['values'];
