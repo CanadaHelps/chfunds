@@ -224,18 +224,32 @@ function chfunds_civicrm_postProcess($formName, &$form) {
 
 function chfunds_civicrm_post($op, $entityName, $objectID, &$object) {
   if ($entityName == 'OptionValueCH' && in_array($op, ['create', 'edit']) && !empty($object->value)) {
-    $contributions = civicrm_api3('Contribution', 'get', [
+    $params = [
       'custom_' . E::getCHFundCustomID() => $object->value,
-      'options' => ['limit' => 0],
-      "return" => ["id", "financial_type_id"],
-    ])['values'];
-    foreach ($contributions as $id => $value) {
-      if ($value['financial_type_id'] != $object->financial_type_id) {
-        civicrm_api3('Contribution', 'create', [
-            'id' => $value['id'],
-            'financial_type_id' => $object->financial_type_id,
-          ]
-        );
+    ];
+    $totalContributions = civicrm_api3('Contribution', 'getcount', $params);
+    if ($totalContributions > 0) {
+      $batchSize = 1000;
+      $offset = $limit = 0;
+      while ($limit < $totalContributions) {
+        $limit += $batchSize;
+        $contributions = civicrm_api3('Contribution', 'get', array_merge($params, [
+          'options' => [
+            'limit' => $limit,
+            'offset' => $offset,
+          ],
+          "return" => ["id", "financial_type_id"],
+        ]))['values'];
+        foreach ($contributions as $id => $value) {
+          if ($value['financial_type_id'] != $object->financial_type_id) {
+            civicrm_api3('Contribution', 'create', [
+                'id' => $value['id'],
+                'financial_type_id' => $object->financial_type_id,
+              ]
+            );
+          }
+        }
+        $offset += $batchSize + 1;
       }
     }
   }
