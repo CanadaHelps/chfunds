@@ -81,12 +81,14 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
 
     foreach ($chFundSubmittedValues as $chFund) {
       if (!in_array($chFund, $this->_chFunds)) {
+        $transaction = new CRM_Core_Transaction();
         civicrm_api3('OptionValueCH', 'create', [
           'option_group_id' => $gid,
           'financial_type_id' => $this->_financial_type_id,
           'value' => $chFund,
           'is_enabled_in_ch' => 0,
         ]);
+        $transaction->commit();
       }
     }
 
