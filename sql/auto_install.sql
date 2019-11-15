@@ -94,3 +94,10 @@ CREATE TABLE `civicrm_option_value_ch` (
         CONSTRAINT FK_civicrm_option_value_ch_option_group_id FOREIGN KEY (`option_group_id`) REFERENCES `civicrm_option_group`(`id`) ON DELETE CASCADE,
         CONSTRAINT FK_civicrm_option_value_ch_financial_type_id FOREIGN KEY (`financial_type_id`) REFERENCES `civicrm_financial_type`(`id`) ON DELETE CASCADE
 )    ;
+
+CREATE TABLE IF NOT EXISTS `civicrm_ch_contribution_batch` (
+   `id` INT NOT NULL AUTO_INCREMENT , `ch_fund` VARCHAR(10) NOT NULL ,
+   `fund` INT(4) NOT NULL ,
+   `contribution_id` INT(10) NOT NULL ,
+  PRIMARY KEY (`id`)
+) ENGINE = InnoDB;
