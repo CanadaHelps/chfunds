@@ -240,14 +240,20 @@ function chfunds_civicrm_post($op, $entityName, $objectID, &$object) {
           ],
           "return" => ["id", "financial_type_id"],
         ]))['values'];
+        $values = [];
         foreach ($contributions as $id => $value) {
           if ($value['financial_type_id'] != $object->financial_type_id) {
-            civicrm_api3('Contribution', 'create', [
-                'id' => $value['id'],
-                'financial_type_id' => $object->financial_type_id,
-              ]
+            $values[] = sprintf(
+              " ( '%s', %d, %d ) ",
+              $object->value,
+              $object->financial_type_id,
+              $value['id']
             );
           }
+        }
+        if (!empty($values)) {
+          $sql = "INSERT INTO civicrm_ch_contribution_batch(`ch_fund`, `fund`, `contribution_id`) VALUES " . implode(', ', $values) . " ;";
+          CRM_Core_DAO::executeQuery($sql);
         }
         $offset += $batchSize + 1;
       }
