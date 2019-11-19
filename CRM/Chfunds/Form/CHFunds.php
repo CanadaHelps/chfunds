@@ -88,6 +88,9 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
           'value' => $chFund,
           'is_enabled_in_ch' => 0,
         ]);
+
+        E::updateCHContribution($this->_financial_type_id, $chFund);
+
         $transaction->commit();
       }
     }
