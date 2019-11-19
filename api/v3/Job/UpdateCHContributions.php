@@ -33,7 +33,7 @@ function civicrm_api3_job_update_c_h_contributions($params) {
       'id' => $dao->contribution_id,
       'financial_type_id' => $dao->fund,
     ]);
-    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch id = " . $dao->id);
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch WHERE id = " . $dao->id);
   }
   return civicrm_api3_create_success();
 }
