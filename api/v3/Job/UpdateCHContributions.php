@@ -9,7 +9,7 @@ use CRM_Chfunds_ExtensionUtil as E;
  * @return void
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC/API+Architecture+Standards
  */
-function _civicrm_api3_job_UpdateCHContributions_spec(&$spec) {
+function _civicrm_api3_job_update_c_h_contributions_spec(&$spec) {
   $params['batch_size'] = [
     'title' => 'Batch Size',
     'type' => CRM_Utils_Type::T_INT,
@@ -25,7 +25,7 @@ function _civicrm_api3_job_UpdateCHContributions_spec(&$spec) {
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */
-function civicrm_api3_job_UpdateCHContributions($params) {
+function civicrm_api3_job_update_c_h_contributions($params) {
   $batchSize = CRM_Utils_Array::value('batch_size', $params, 1000);
   $dao = CRM_Core_DAO::executeQuery("SELECT * FROM civicrm_ch_contribution_batch LIMIT 0, $batchSize ");
   while($dao->fetch()) {
@@ -33,7 +33,7 @@ function civicrm_api3_job_UpdateCHContributions($params) {
       'id' => $dao->contribution_id,
       'financial_type_id' => $dao->fund,
     ]);
-    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch id = " . $dao->id);
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch WHERE id = " . $dao->id);
   }
   return civicrm_api3_create_success();
 }
