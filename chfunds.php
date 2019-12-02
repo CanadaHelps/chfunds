@@ -173,13 +173,33 @@ function chfunds_civicrm_buildForm($formName, &$form) {
       ['' => ts('- select -')] + $financialTypes,
       TRUE
     );
-    $enabled = $form->add('checkbox', 'is_active', ts('Enabled?'));
-    $enabled->freeze();
 
-    $form->addYesNo('is_enabled_in_ch', ts('Enabled in CanadaHelps'), FALSE, TRUE);
+    $form->add('checkbox', 'is_active', ts('Enabled?'))->freeze();
+
+    $form->add('text',
+      'label',
+      ts('Label'),
+      CRM_Core_DAO::getAttribute('CRM_Core_DAO_OptionValue', 'label'),
+      TRUE
+    )->freeze();
+
+    $choice = [
+      $form->createElement('radio', NULL, '11', ts('Yes'), '1', ['id_suffix' => 'is_enabled_in_ch']),
+      $form->createElement('radio', NULL, '11', ts('No'), '0', ['id_suffix' => 'is_enabled_in_ch']),
+    ];
+    $form->addGroup($choice, 'is_enabled_in_ch', ts('Enabled in CanadaHelps'))->freeze();
+
     CRM_Core_Region::instance('page-body')->add(array(
       'template' => "CRM/Chfunds/AddCHFund.tpl",
     ));
+
+    $value = $form->add('text',
+      'value',
+      ts('Value'),
+      CRM_Core_DAO::getAttribute('CRM_Core_DAO_OptionValue', 'value'),
+      TRUE
+    );
+    $value->freeze();
 
     if ($id = $form->getVar('_id')) {
       $defaults = E::getDefaultOptionValueCH($id);
