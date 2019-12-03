@@ -176,9 +176,14 @@ function chfunds_civicrm_pageRun(&$page) {
 
 function chfunds_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_Admin_Form_Options' && $form->getVar('_gName') == 'ch_fund' && !($form->_action & CRM_Core_Action::DELETE)) {
+
     CRM_Financial_BAO_FinancialType::getAvailableFinancialTypes($financialTypes, $form->_action);
+    if ($id = $form->getVar('_id')) {
+      $defaults = E::getDefaultOptionValueCH($id);
+      $form->setDefaults($defaults);
+    }
     $condition = empty($form->getVar('_id')) ? '' : "WHERE value <> '" . civicrm_api3('OptionValue', 'getvalue', ['id' => $form->getVar('_id'), 'return' => 'value']) . "'";
-    E::filterFinancialTypes($financialTypes, $condition);
+    E::filterFinancialTypes($financialTypes, $condition, CRM_Utils_Array::value('financial_type_id', $defaults));
     $form->add('select', 'financial_type_id',
       ts('Fund'),
       ['' => ts('- select -')] + $financialTypes,
@@ -213,11 +218,6 @@ function chfunds_civicrm_buildForm($formName, &$form) {
       TRUE
     );
     $value->freeze();
-
-    if ($id = $form->getVar('_id')) {
-      $defaults = E::getDefaultOptionValueCH($id);
-      $form->setDefaults($defaults);
-    }
   }
   elseif ($formName == 'CRM_Contribute_Form_Contribution' && ($form->_action & CRM_Core_Action::UPDATE)) {
     $fundCustomFieldID = civicrm_api3('CustomField', 'getvalue', ['name' => 'Fund', 'return' => 'id']);
