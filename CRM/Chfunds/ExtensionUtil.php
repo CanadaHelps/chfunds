@@ -49,10 +49,10 @@ public static function getMappedItem($column, $condition = '') {
   return explode(',', CRM_Core_DAO::singleValueQuery("SELECT GROUP_CONCAT(DISTINCT {$column}) FROM civicrm_option_value_ch {$condition} "));
 }
 
-public static function filterFinancialTypes(&$financialTypes, $condition) {
+public static function filterFinancialTypes(&$financialTypes, $condition, $financialTypeID = NULL) {
   $mappedFinancialTypes = self::getMappedItem('financial_type_id', $condition);
   foreach ($financialTypes as $key => $label) {
-    if (in_array($key, $mappedFinancialTypes)) {
+    if (in_array($key, $mappedFinancialTypes) && !empty($financialTypeID) && $key != $financialTypeID) {
       unset($financialTypes[$key]);
     }
   }
