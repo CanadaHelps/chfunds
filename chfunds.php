@@ -100,6 +100,12 @@ function chfunds_civicrm_caseTypes(&$caseTypes) {
   _chfunds_civix_civicrm_caseTypes($caseTypes);
 }
 
+function chfunds_civicrm_permission(&$permissions) {
+  $permissions['CH admin miscellaneous'] = [ts('CiviCRM: CH admin miscellaneous')];
+  $permissions['assign CH Fund'] = [ts('CiviCRM: assign CH Fund')];
+}
+
+
 /**
  * Implements hook_civicrm_angularModules().
  *
@@ -176,12 +182,14 @@ function chfunds_civicrm_buildForm($formName, &$form) {
 
     $form->add('checkbox', 'is_active', ts('Enabled?'))->freeze();
 
-    $form->add('text',
-      'label',
-      ts('Label'),
-      CRM_Core_DAO::getAttribute('CRM_Core_DAO_OptionValue', 'label'),
-      TRUE
-    )->freeze();
+    if (!CRM_Core_Permission::check('CH admin miscellaneous')) {
+      $form->add('text',
+        'label',
+        ts('Label'),
+        CRM_Core_DAO::getAttribute('CRM_Core_DAO_OptionValue', 'label'),
+        TRUE
+      )->freeze();
+    }
 
     $choice = [
       $form->createElement('radio', NULL, '11', ts('Yes'), '1', ['id_suffix' => 'is_enabled_in_ch']),
