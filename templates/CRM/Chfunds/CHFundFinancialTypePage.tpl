@@ -7,8 +7,13 @@ CRM.$(function($) {
   var chFunds = $.parseJSON('{/literal}{$chFunds}{literal}');
   $('table tr').each(function(e) {
     if (e > 0) {
-      $('td:nth-child(3)', this).after('<td>' + chFunds[e] + '</td>');
-      $('td:nth-child(8)', this).prepend('<a class="action-item crm-hover-button" title="' + ts('CH Funds') + '" href="' + ts(chFundLinks[e]) + '">CH Funds</a>&nbsp;&nbsp;');
+      if (chFunds[e] === null) {
+        $('td:nth-child(3)', this).after('<td>&nbsp;&nbsp;</td>');
+      }
+      else {
+        $('td:nth-child(3)', this).after('<td>' + chFunds[e] + '</td>');
+        $('td:nth-child(8)', this).prepend('<a class="action-item crm-hover-button" title="' + ts('CH Funds') + '" href="' + ts(chFundLinks[e]) + '">Assign CH Funds</a>&nbsp;&nbsp;');
+      }
     }
   });
 
