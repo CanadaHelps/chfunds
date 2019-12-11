@@ -25,6 +25,8 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
     foreach ($optionValues as $value) {
       $chFunds[$value['value']] = $value['label'];
     }
+
+    $this->addElement('checkbox', "ch_funds_check_all", NULL, ts('Check all'));
     foreach ($chFunds as $chFund => $label) {
       $this->addElement('checkbox', "ch_funds[$chFund]", NULL, $label);
     }
