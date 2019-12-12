@@ -1,6 +1,8 @@
 <?php
 
 require_once 'chfunds.civix.php';
+require_once 'chfunds.permitted-roles.php';
+
 use CRM_Chfunds_ExtensionUtil as E;
 
 /**
@@ -103,6 +105,48 @@ function chfunds_civicrm_caseTypes(&$caseTypes) {
 function chfunds_civicrm_permission(&$permissions) {
   $permissions['CH admin miscellaneous'] = [ts('CiviCRM: CH admin miscellaneous')];
   $permissions['assign CH Fund'] = [ts('CiviCRM: assign CH Fund')];
+
+  __addCHFundPermssionToDrupalRole();
+}
+
+function __addCHFundPermssionToDrupalRole() {
+  // ensure that its a drupal site and user module is enabled
+  if (CRM_Core_Config::singleton()->userFramework != 'Drupal' && !module_exists('user')) {
+    return;
+  }
+
+  $settings = unserialize(DRUPAL_ROLE_PERMISSIONS);
+
+  foreach (user_roles() as $rid => $name) {
+    if (in_array(strtolower($name), array_keys($settings))) {
+      foreach ($settings[strtolower($name)] as $permission) {
+        $result = db_query("SELECT * FROM {role_permission} where rid = $rid AND permission = '$permission'");
+        $found = FALSE;
+        foreach ($result as $row) {
+          $found = ($row->permission == $permission);
+        }
+        if (!$found) {
+          // delete all permission assigned to the other role
+          db_delete('role_permission')
+            ->condition('permission', $permission)
+            ->execute();
+
+          // assign permission to specified role
+          db_merge('role_permission')->key(
+            [
+              'rid' => $rid,
+              'permission' => $permission,
+            ]
+          )->fields(['module' => 'civicrm'])
+          ->execute();
+
+          // Clear the user access cache.
+          drupal_static_reset('user_access');
+          drupal_static_reset('user_role_permissions');
+        }
+      }
+    }
+  }
 }
 
 /**
