@@ -12,7 +12,9 @@ CRM.$(function($) {
       }
       else {
         $('td:nth-child(3)', this).after('<td>' + chFunds[e] + '</td>');
-        $('td:nth-child(8)', this).prepend('<a class="action-item crm-hover-button" title="' + ts('CH Funds') + '" href="' + ts(chFundLinks[e]) + '">Assign CH Funds</a>&nbsp;&nbsp;');
+        if (chFundLinks[e]) {
+          $('td:nth-child(8)', this).prepend('<a class="action-item crm-hover-button" title="' + ts('CH Funds') + '" href="' + chFundLinks[e] + '">Assign CH Funds</a>&nbsp;&nbsp;');
+        }
       }
     }
   });

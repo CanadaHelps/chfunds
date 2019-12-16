@@ -199,7 +199,6 @@ function chfunds_civicrm_pageRun(&$page) {
     $chFundsByFinancialType = E::getCHFundsByFinancialType();
     foreach ($rows as $id => $row) {
       $chFunds[$count] = CRM_Utils_Array::value($id, $chFundsByFinancialType, '');
-      $chFundLinks[$count] = NULL;
       if (CRM_Core_Permission::check('assign CH Fund') || $row['name'] == 'Unassigned CH Fund') {
         $chFundLinks[$count] = CRM_Utils_System::url('civicrm/chfunds', 'reset=1&financial_type_id=' . $row['id']);
       }

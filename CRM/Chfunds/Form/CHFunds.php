@@ -21,9 +21,18 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
     $financialType = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_FinancialType', $this->_financial_type_id, 'name');
     CRM_Utils_System::setTitle(ts('%1 - Assign CH Funds', [1 => $financialType]));
     $optionValues = civicrm_api3('OptionValue', 'get', ['option_group_id' => 'ch_fund', 'options' => ['limit' => 0]])['values'];
+
+    $values = civicrm_api3('OptionValueCH', 'get', [
+      'financial_type_id' => $this->_financial_type_id,
+      'options' => ['limit' => 0],
+    ])['values'];
+    $selectedValues = CRM_Utils_Array::collect('value', $values);
+
     $chFunds = [];
     foreach ($optionValues as $value) {
-      $chFunds[$value['value']] = $value['label'];
+      if (in_array($value['value'], $selectedValues)) {
+        $chFunds[$value['value']] = $value['label'];
+      }
     }
 
     $this->addElement('checkbox', "ch_funds_check_all", NULL, ts('Check all'));
@@ -33,9 +42,7 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
 
     $financialTypes = [];
     CRM_Financial_BAO_FinancialType::getAvailableFinancialTypes($financialTypes, CRM_Core_Action::ADD);
-    if (!CRM_Core_Permission::check('assign CH Fund')) {
-      $financialTypes = [array_search('Unassigned CH Fund', $financialTypes) => ts('Unassigned CH Fund')];
-    }
+
     $this->add('select', 'financial_type_id',
       ts('Financial Type'),
       $financialTypes,
@@ -76,17 +83,16 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
    * @return array
    */
   public function setDefaultValues() {
-    $defaults = $statusVals = [];
+    $defaults = [];
     $values = civicrm_api3('OptionValueCH', 'get', [
       'financial_type_id' => $this->_financial_type_id,
       'options' => ['limit' => 0],
     ])['values'];
     foreach ($values as $value) {
-      $defaults['ch_funds'][$value['value']] = 1;
+      $this->_chFunds[] = $value['value'];
     }
     $defaults['financial_type_id'] = $this->_financial_type_id;
 
-    $this->_chFunds = array_keys($defaults['ch_funds']);
     return $defaults;
   }
 
@@ -95,33 +101,20 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
     $chFundSubmittedValues = array_keys($values['ch_funds']);
     $gid = civicrm_api3('OptionGroup', 'getvalue', ['name' => 'ch_fund', 'return' => 'id']);
 
-    $financialType = $this->_financial_type_id;
-
     if ($this->_financial_type_id != $values['financial_type_id'] && !empty($chFundSubmittedValues)) {
-      // delete all the chfund options of old financial type
-      CRM_Core_DAO::executeQuery(" DELETE FROM civicrm_option_value_ch WHERE financial_type_id IN ($this->_financial_type_id, " . $values['financial_type_id'] .  ")");
-      $this->_chFunds = [];
-      $financialType = $values['financial_type_id'];
-    }
-
-    foreach ($chFundSubmittedValues as $chFund) {
-      if (!in_array($chFund, $this->_chFunds)) {
-        $transaction = new CRM_Core_Transaction();
+      foreach ($chFundSubmittedValues as $chFund) {
+        CRM_Core_DAO::executeQuery(" DELETE FROM civicrm_option_value_ch WHERE financial_type_id  = $this->_financial_type_id AND value = '$chFund'");
         civicrm_api3('OptionValueCH', 'create', [
           'option_group_id' => $gid,
-          'financial_type_id' => $financialType,
+          'financial_type_id' => $values['financial_type_id'],
           'value' => $chFund,
           'is_enabled_in_ch' => 0,
         ]);
 
-        E::updateCHContribution($financialType, $chFund);
-
+        $transaction = new CRM_Core_Transaction();
+        E::updateCHContribution($values['financial_type_id'], $chFund);
         $transaction->commit();
       }
-    }
-
-    if ($this->_financial_type_id == $values['financial_type_id']) {
-      CRM_Core_DAO::executeQuery(sprintf("DELETE FROM civicrm_option_value_ch WHERE financial_type_id = $this->_financial_type_id AND value NOT IN ('%s') ", implode("', '", $chFundSubmittedValues)));
     }
 
     parent::postProcess();
