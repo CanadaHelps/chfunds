@@ -39,6 +39,7 @@ public static function getCHFundsByFinancialType() {
   }
 
   foreach ($result as $k => $v) {
+    asort($v);
     $result[$k] = implode(', ', $v);
   }
 
