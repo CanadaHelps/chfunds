@@ -9,7 +9,7 @@ use Civi\Test\TransactionalInterface;
  * This is a generic test class implemented with PHPUnit.
  * @group headless
  */
-class api_v3_ChContribution_CreateTest extends \PHPUnit_Framework_TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
+class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
   /**
    * Civi\Test has many helpers, like install(), uninstall(), sql(), and sqlFile().
@@ -42,8 +42,9 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit_Framework_TestCase imple
    * Note how the function name begins with the word "test".
    */
   public function testApiExample() {
-    $result = civicrm_api3('ChContribution', 'Create', array('magicword' => 'sesame'));
-    $this->assertEquals('Twelve', $result['values'][12]['name']);
+    $this->markTestIncomplete('Test has not been created yet');
+    //$result = civicrm_api3('CHContribution', 'Create', array('magicword' => 'sesame'));
+    //$this->assertEquals('Twelve', $result['values'][12]['name']);
   }
 
 }
