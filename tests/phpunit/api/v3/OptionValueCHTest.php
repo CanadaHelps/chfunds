@@ -24,13 +24,26 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
 
   /**
    * Financial Type aka Fund that is used by possibly multiple CHFunds
+   * @var array
    */
   protected $fund;
 
+  /**
+   * Financial Type aka Fund that is the default fund.
+   * @var array
+   */
   protected $unallocatedFund;
 
+  /**
+   * Custom Group to hold the Fund custom field.
+   * @var array
+   */
   protected $customGroup;
 
+  /**
+   * Fund Custom field.
+   * @var array
+   */
   protected $customField;
 
   public function setUpHeadless() {
@@ -87,32 +100,28 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     parent::tearDown();
     $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
     $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
-    try {
-      $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund['id']]);
-    }
-    catch (Exception $e) {
-    }
+    $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund['id']]);
   }
 
   /**
    * Test that when calling an OptionValue API with option_group_id being ch_fund that it is correctly stored in the mapping.
    */
   public function testCreateCHFundOptionValue() {
-     $chFund =  $this->callAPISuccess('OptionValue', 'create', [
-       'label' => 'Test Created CH Fund 1',
-       'option_group_id' => 'ch_fund',
-       'value' => 'CH+99999',
-     ]);
-     // Confirm that when we create a CHFund that it is initially allocated to the unallocated CHFund Financial type (fund).
-     $this->assertEquals([$this->unallocatedFund['id'] => 'Test Created CH Fund 1'], E::getCHFundsByFinancialType());
-     $chFundMap = $this->callAPISuccess('OptionValueCH', 'get', ['value' => 'CH+99999']);
-     // Confirm that we can use the API to change the financial type mapping.
-     $this->callAPISuccess('OptionValueCH', 'create', ['financial_type_id' => $this->fund['id'], 'id' => $chFundMap['id']]);
-     $this->assertEquals([$this->fund['id'] => 'Test Created CH Fund 1'], E::getCHFundsByFinancialType());
-     $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
-     $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
-     // Confirm that deleting the option value also cascaded to deleting the CHFund mapping. 
-     $this->assertEmpty($updatedMap['values']);
+    $chFund = $this->callAPISuccess('OptionValue', 'create', [
+      'label' => 'Test Created CH Fund 1',
+      'option_group_id' => 'ch_fund',
+      'value' => 'CH+99999',
+    ]);
+    // Confirm that when we create a CHFund that it is initially allocated to the unallocated CHFund Financial type (fund).
+    $this->assertEquals([$this->unallocatedFund['id'] => 'Test Created CH Fund 1'], E::getCHFundsByFinancialType());
+    $chFundMap = $this->callAPISuccess('OptionValueCH', 'get', ['value' => 'CH+99999']);
+    // Confirm that we can use the API to change the financial type mapping.
+    $this->callAPISuccess('OptionValueCH', 'create', ['financial_type_id' => $this->fund['id'], 'id' => $chFundMap['id']]);
+    $this->assertEquals([$this->fund['id'] => 'Test Created CH Fund 1'], E::getCHFundsByFinancialType());
+    $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
+    $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
+    // Confirm that deleting the option value also cascaded to deleting the CHFund mapping.
+    $this->assertEmpty($updatedMap['values']);
   }
 
   /**
@@ -120,16 +129,16 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
    */
   public function testCreateMultipleCHFunds() {
     $chFund = $this->callAPISuccess('OptionValue', 'create', [
-       'label' => 'Test Created CH Fund 1',
-       'option_group_id' => 'ch_fund',
-       'value' => 'CH+99999',
+      'label' => 'Test Created CH Fund 1',
+      'option_group_id' => 'ch_fund',
+      'value' => 'CH+99999',
     ]);
     $chFundMap = $this->callAPISuccess('OptionValueCH', 'get', ['value' => 'CH+99999']);
     $this->callAPISuccess('OptionValueCH', 'create', ['financial_type_id' => $this->fund['id'], 'id' => $chFundMap['id']]);
-    $chFund2 =  $this->callAPISuccess('OptionValue', 'create', [
-       'label' => 'Test Created CH Fund 2',
-       'option_group_id' => 'ch_fund',
-       'value' => 'CH+999999',
+    $chFund2 = $this->callAPISuccess('OptionValue', 'create', [
+      'label' => 'Test Created CH Fund 2',
+      'option_group_id' => 'ch_fund',
+      'value' => 'CH+999999',
     ]);
     // Confirm that the new CHFund has been initially allocated to the new unallocated CHFund fund.
     $this->assertEquals([$this->unallocatedFund['id'] => 'Test Created CH Fund 2', $this->fund['id'] => 'Test Created CH Fund 1'], E::getCHFundsByFinancialType());
@@ -139,7 +148,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
 
     $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
     $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
-    // Confirm that deleting the option value also cascaded to deleting the CHFund mapping. 
+    // Confirm that deleting the option value also cascaded to deleting the CHFund mapping.
     $this->assertEquals(1, $updatedMap['count']);
     $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund2['id']]);
     $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
