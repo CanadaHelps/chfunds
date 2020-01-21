@@ -22,6 +22,12 @@ class api_v3_CHContribution_GetTest extends \PHPUnit\Framework\TestCase implemen
   protected $customField;
 
   /**
+   * Should we destroy the custom fields that we create or not
+   * @var bool
+   */
+  protected $tareDownCustomField = TRUE;
+
+  /**
    * Civi\Test has many helpers, like install(), uninstall(), sql(), and sqlFile().
    * See: https://github.com/civicrm/org.civicrm.testapalooza/blob/master/civi-test.md
    */
@@ -51,23 +57,31 @@ class api_v3_CHContribution_GetTest extends \PHPUnit\Framework\TestCase implemen
       CRM_Core_DAO::executeQuery("UPDATE civicrm_managed SET entity_id = %1 WHERE entity_type = 'OptionGroup' AND module = 'biz.jmaconsulting.chfunds'", [1 => [$optionGroupNew['id'], 'Positive']]);
     }
     $optionGroup = $this->callAPISuccess('OptionGroup', 'get', ['name' => 'ch_fund']);
-    $this->customGroup = $this->callAPISuccess('CustomGroup', 'create', [
-      'title' => 'Additional info',
-      'extends' => 'Contribution',
-      'collapse_display' => 1,
-      'is_public' => 1,
-      'is_active' => 1,
-    ]);
-    $this->customField = $this->callAPISuccess('CustomField', 'create', [
-      'custom_group_id' => $this->customGroup['id'],
-      'label' => 'CH Fund',
-      'name' => 'Fund',
-      'data_type' => 'String',
+    $customFieldCheck = $this->callAPISuccess('CustomField', 'get', [
       'option_group_id' => 'ch_fund',
-      'is_searchable' => 1,
-      'is_active' => 1,
-      'html_type' => 'ContactReference',
     ]);
+    if (empty($customFieldCheck['count'])) {
+      $this->customGroup = $this->callAPISuccess('CustomGroup', 'create', [
+        'title' => 'Additional info',
+        'extends' => 'Contribution',
+        'collapse_display' => 1,
+        'is_public' => 1,
+        'is_active' => 1,
+      ]);
+      $this->customField = $this->callAPISuccess('CustomField', 'create', [
+        'custom_group_id' => $this->customGroup['id'],
+        'label' => 'CH Fund',
+        'name' => 'Fund',
+        'data_type' => 'String',
+        'option_group_id' => 'ch_fund',
+        'is_searchable' => 1,
+        'is_active' => 1,
+        'html_type' => 'ContactReference',
+      ]);
+    }
+    else {
+      $this->tareDownCustomField = FALSE;
+    }
     $this->fund = $this->callAPISuccess('FinancialType', 'create', [
       'label' => 'Test Created Fund',
       'name' => 'test_created_fund',
@@ -78,8 +92,10 @@ class api_v3_CHContribution_GetTest extends \PHPUnit\Framework\TestCase implemen
 
   public function tearDown() {
     parent::tearDown();
-    $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
-    $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
+    if ($this->tareDownCustomField) {
+      $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
+      $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
+    }
     $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund['id']]);
   }
 

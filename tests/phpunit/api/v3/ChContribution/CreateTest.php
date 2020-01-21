@@ -23,6 +23,12 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase imple
   protected $customField;
 
   /**
+   * Should we destroy the custom fields that we create or not
+   * @var bool
+   */
+  protected $tareDownCustomField = TRUE;
+
+  /**
    * Civi\Test has many helpers, like install(), uninstall(), sql(), and sqlFile().
    * See: https://github.com/civicrm/org.civicrm.testapalooza/blob/master/civi-test.md
    */
@@ -52,23 +58,29 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase imple
       CRM_Core_DAO::executeQuery("UPDATE civicrm_managed SET entity_id = %1 WHERE entity_type = 'OptionGroup' AND module = 'biz.jmaconsulting.chfunds'", [1 => [$optionGroupNew['id'], 'Positive']]);
     }
     $optionGroup = $this->callAPISuccess('OptionGroup', 'get', ['name' => 'ch_fund']);
-    $this->customGroup = $this->callAPISuccess('CustomGroup', 'create', [
-      'title' => 'Additional info',
-      'extends' => 'Contribution',
-      'collapse_display' => 1,
-      'is_public' => 1,
-      'is_active' => 1,
-    ]);
-    $this->customField = $this->callAPISuccess('CustomField', 'create', [
-      'custom_group_id' => $this->customGroup['id'],
-      'label' => 'CH Fund',
-      'name' => 'Fund',
-      'data_type' => 'String',
-      'option_group_id' => 'ch_fund',
-      'is_searchable' => 1,
-      'is_active' => 1,
-      'html_type' => 'ContactReference',
-    ]);
+    $customFieldCheck = $this->callAPISuccess('CustomField', 'get', ['option_group_id' => 'ch_fund']);
+    if (empty($customFieldCheck['count'])) {
+      $this->customGroup = $this->callAPISuccess('CustomGroup', 'create', [
+        'title' => 'Additional info',
+        'extends' => 'Contribution',
+        'collapse_display' => 1,
+        'is_public' => 1,
+        'is_active' => 1,
+      ]);
+      $this->customField = $this->callAPISuccess('CustomField', 'create', [
+        'custom_group_id' => $this->customGroup['id'],
+        'label' => 'CH Fund',
+        'name' => 'Fund',
+        'data_type' => 'String',
+        'option_group_id' => 'ch_fund',
+        'is_searchable' => 1,
+        'is_active' => 1,
+        'html_type' => 'ContactReference',
+      ]);
+    }
+    else {
+      $this->tareDownCustomField = FALSE;
+    }
     $this->fund = $this->callAPISuccess('FinancialType', 'create', [
       'label' => 'Test Created Fund',
       'name' => 'test_created_fund',
@@ -84,8 +96,10 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase imple
 
   public function tearDown() {
     parent::tearDown();
-    $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
-    $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
+    if ($this->tareDownCustomField) {
+      $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
+      $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
+    }
     $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund2['id']]);
     $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund['id']]);
   }
@@ -141,11 +155,10 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase imple
     $getResult = $this->callAPISuccess('Contribution', 'get', ['return' => ['custom_' . $this->customField['id'], 'financial_type_id'], 'id' => $contribution['id']]);
     // Confirm that nothing has happened yet to the contributions.
     $this->assertEquals($this->fund['id'], $getResult['values'][$contribution['id']]['financial_type_id']);
-    E::updateCHContribution($this->fund2['id'], 'CH+99999');
-    $getResult = $this->callAPISuccess('Contribution', 'get', ['return' => ['custom_' . $this->customField['id'], 'financial_type_id'], 'id' => $contribution['id']]);
-    // Confirm that nothing has happened yet to the contributions.
-    $this->assertEquals($this->fund['id'], $getResult['values'][$contribution['id']]['financial_type_id']);
-    $this->callAPISuccess('job', 'update_c_h_contributions', []);
+    $this->callAPISuccess('CHContribution', 'create', [
+      'id' => $contribution['id'],
+      'ch_fund' => 'CH+99999',
+    ]);
     $getResult = $this->callAPISuccess('Contribution', 'get', ['return' => ['custom_' . $this->customField['id'], 'financial_type_id'], 'id' => $contribution['id']]);
     // Confirm that now we have run the job api method that the contribution has been updated.
     $this->assertEquals($this->fund2['id'], $getResult['values'][$contribution['id']]['financial_type_id']);
