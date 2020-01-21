@@ -220,10 +220,12 @@ function chfunds_civicrm_buildForm($formName, &$form) {
     if ($form->_action & CRM_Core_Action::UPDATE) {
       $form->setDefaults(['contact_id' => CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Domain', CRM_Core_Config::domainID(), 'contact_id')]);
     }
+    $postHelpFT = ts('These Account Types are used to help validate the Assignment of GL Accounts to Funds according to various relationships. For example, only GL Accounts that are of GL Account Type = "Asset" can be set up as "Accounts Receivable Account is".');
     CRM_Core_Resources::singleton()->addScript(
       "CRM.$(function($) {
         $('.crm-contribution-form-block-organisation_name').addClass('hiddenElement');
         $('.crm-contribution-form-block-tax_rate').addClass('hiddenElement');
+        $('.crm-contribution-form-block-financial_account_type_id .html-adjust select').after('<br/><span class=\"description\">$postHelpFT</span>');
       });
     ");
 
