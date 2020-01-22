@@ -224,6 +224,7 @@ function chfunds_civicrm_buildForm($formName, &$form) {
     CRM_Core_Resources::singleton()->addScript(
       "CRM.$(function($) {
         $('.crm-contribution-form-block-organisation_name').addClass('hiddenElement');
+        $('.crm-contribution-form-block-tax_rate').addClass('hiddenElement');
       });
     ");
 
