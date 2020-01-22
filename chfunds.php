@@ -111,7 +111,7 @@ function chfunds_civicrm_permission(&$permissions) {
 
 function __addCHFundPermssionToDrupalRole() {
   // ensure that its a drupal site and user module is enabled
-  if (CRM_Core_Config::singleton()->userFramework != 'Drupal' && !module_exists('user')) {
+  if (CRM_Core_Config::singleton()->userFramework != 'Drupal' || !module_exists('user')) {
     return;
   }
 
