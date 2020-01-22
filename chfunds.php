@@ -216,6 +216,18 @@ function chfunds_civicrm_pageRun(&$page) {
 }
 
 function chfunds_civicrm_buildForm($formName, &$form) {
+  if ($formName == 'CRM_Financial_Form_FinancialAccount' && !($form->_action & CRM_Core_Action::DELETE)) {
+    if ($form->_action & CRM_Core_Action::UPDATE) {
+      $form->setDefaults(['contact_id' => CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Domain', CRM_Core_Config::domainID(), 'contact_id')]);
+    }
+    CRM_Core_Resources::singleton()->addScript(
+      "CRM.$(function($) {
+        $('.crm-contribution-form-block-organisation_name').addClass('hiddenElement');
+        $('.crm-contribution-form-block-tax_rate').addClass('hiddenElement');
+      });
+    ");
+
+  }
   if ($formName == 'CRM_Admin_Form_Options' && $form->getVar('_gName') == 'ch_fund' && !($form->_action & CRM_Core_Action::DELETE)) {
 
     CRM_Financial_BAO_FinancialType::getAvailableFinancialTypes($financialTypes, $form->_action);
