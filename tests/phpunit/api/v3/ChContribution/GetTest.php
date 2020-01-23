@@ -25,7 +25,7 @@ class api_v3_CHContribution_GetTest extends \PHPUnit\Framework\TestCase implemen
    * Should we destroy the custom fields that we create or not
    * @var bool
    */
-  protected $tareDownCustomField = TRUE;
+  protected $tearDownCustomField = TRUE;
 
   /**
    * Civi\Test has many helpers, like install(), uninstall(), sql(), and sqlFile().
@@ -80,7 +80,7 @@ class api_v3_CHContribution_GetTest extends \PHPUnit\Framework\TestCase implemen
       ]);
     }
     else {
-      $this->tareDownCustomField = FALSE;
+      $this->tearDownCustomField = FALSE;
     }
     $this->fund = $this->callAPISuccess('FinancialType', 'create', [
       'label' => 'Test Created Fund',
@@ -92,7 +92,7 @@ class api_v3_CHContribution_GetTest extends \PHPUnit\Framework\TestCase implemen
 
   public function tearDown() {
     parent::tearDown();
-    if ($this->tareDownCustomField) {
+    if ($this->tearDownCustomField) {
       $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
       $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
     }

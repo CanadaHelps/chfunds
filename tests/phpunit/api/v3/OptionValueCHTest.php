@@ -50,7 +50,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
    * Should we destroy the custom fields that we create or not
    * @var bool
    */
-  protected $tareDownCustomField = TRUE;
+  protected $tearDownCustomField = TRUE;
 
   public function setUpHeadless() {
     // Civi\Test has many helpers, like install(), uninstall(), sql(), and sqlFile().
@@ -101,7 +101,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     }
     else {
       $this->customField = $customFieldCheck;
-      $this->tareDownCustomField = FALSE;
+      $this->tearDownCustomField = FALSE;
     }
     $this->fund = $this->callAPISuccess('FinancialType', 'create', [
       'label' => 'Test Created Fund',
@@ -113,7 +113,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
 
   public function tearDown() {
     parent::tearDown();
-    if ($this->tareDownCustomField) {
+    if ($this->tearDownCustomField) {
       $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
       $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
     }
