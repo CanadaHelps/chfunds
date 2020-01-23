@@ -233,7 +233,32 @@ function chfunds_civicrm_buildForm($formName, &$form) {
         $('.crm-contribution-form-block-account_type_code .html-adjust .description').html('$postHelGLTypeCode');
       });
     ");
+  }
+  if ($formName == 'CRM_Financial_Form_FinancialTypeAccount' && !($form->_action & CRM_Core_Action::DELETE)) {
+    $params['orderColumn'] = 'label';
+    $AccountTypeRelationship = array_flip(CRM_Core_PseudoConstant::get('CRM_Financial_DAO_EntityFinancialAccount', 'account_relationship', $params));
+    foreach ([
+      'Accounts Receivable Account is',
+      'Cost of Sales Account is',
+      'Credit/Contra Revenue Account is',
+      'Deferred Revenue Account is',
+      'Discount Account is',
+      'Premium Inventory Account is',
+    ] as $type) {
+      unset($AccountTypeRelationship[$type]);
+    }
+    $AccountTypeRelationship = array_flip($AccountTypeRelationship);
+    $isARFlag = $form->getVar('_isARFlag');
+    $element = $form->add('select',
+      'account_relationship',
+      ts('Financial Account Relationship'),
+      ['select' => ts('- Select Financial Account Relationship -')] + $AccountTypeRelationship,
+      TRUE
+    );
 
+    if ($isARFlag) {
+      $element->freeze();
+    }
   }
   if ($formName == 'CRM_Admin_Form_Options' && $form->getVar('_gName') == 'ch_fund' && !($form->_action & CRM_Core_Action::DELETE)) {
 
