@@ -11,24 +11,31 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
           (civicrm_api3('OptionGroup', 'getvalue', ['id' => $optionGroupID, 'return' => 'name']) == 'ch_fund')
         )
       ) {
+        // $params array hold the parameter of the corresponsing OptionValueCH relationship to created if a ch_fund option value is created OR
+        //   OptionValueCH relationship to updated if the ch_fund option value is updated
         $params = [
           'option_group_id' => is_int($optionGroupID) ? $optionGroupID : civicrm_api3('OptionGroup', 'getvalue', ['name' => 'ch_fund', 'return' => 'id']),
           'financial_type_id' => civicrm_api3('FinancialType', 'getvalue', ['name' => 'Unassigned CH Fund', 'return' => 'id']),
           'value' => $apiRequest['params']['value'],
           'is_enabled_in_ch' => 0,
         ];
+        // present of 'id' in OptionValue.create API call decides wether its an edit or not
         if (!empty($apiRequest['params']['id'])) {
-          $id = civicrm_api3('OptionValueCH', 'getsingle', [
-            'value' => civicrm_api3('OptionValue', 'getsingle', ['id' => $apiRequest['params']['id']])['value'],
+          // if its a OptionValue value update then fetch the corresponding OptionValueCH mapping and use its ID to be set the in the parameter,
+          //  so that corresponsing relationship gets updated by updating the value
+          $OVCHid = civicrm_api3('OptionValueCH', 'getsingle', [
+            'value' => civicrm_api3('OptionValue', 'getsingle', ['id' => $apiRequest['params']['id']])['value'], // based on OptionValue ID fetch the old option value and use it as a filter to fetch respective OptionValueCH relationship
             'options' => [
               'limit' => 1,
             ],
           ])['id'];
-          $params['id'] = $id;
+          $params['id'] = $OVCHid;
         }
         else {
+          // always enusre that whenever a new ch_fund optionValue is created its always reserved so that it cant be deleted from UI
           $apiRequest['params']['is_reserved'] = 1;
         }
+        // create or update OptionValueCH relationship
         civicrm_api3('OptionValueCH', 'create', $params);
       }
     }
