@@ -11,13 +11,25 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
           (civicrm_api3('OptionGroup', 'getvalue', ['id' => $optionGroupID, 'return' => 'name']) == 'ch_fund')
         )
       ) {
-        $apiRequest['params']['is_reserved'] = 1;
-        civicrm_api3('OptionValueCH', 'create', [
+        $params = [
           'option_group_id' => is_int($optionGroupID) ? $optionGroupID : civicrm_api3('OptionGroup', 'getvalue', ['name' => 'ch_fund', 'return' => 'id']),
           'financial_type_id' => civicrm_api3('FinancialType', 'getvalue', ['name' => 'Unassigned CH Fund', 'return' => 'id']),
           'value' => $apiRequest['params']['value'],
           'is_enabled_in_ch' => 0,
-        ]);
+        ];
+        if (!empty($apiRequest['params']['id'])) {
+          $id = civicrm_api3('OptionValueCH', 'getsingle', [
+            'value' => civicrm_api3('OptionValue', 'getsingle', ['id' => $apiRequest['params']['id']])['value'],
+            'options' => [
+              'limit' => 1,
+            ],
+          ])['id'];
+          $params['id'] = $id;
+        }
+        else {
+          $apiRequest['params']['is_reserved'] = 1;
+        }
+        civicrm_api3('OptionValueCH', 'create', $params);
       }
     }
     return $apiRequest;

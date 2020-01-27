@@ -172,4 +172,24 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->assertEmpty($updatedMap['values']);
   }
 
+  public function testCreateOptionValueChange() {
+    $chFund = $this->callAPISuccess('OptionValue', 'create', [
+      'label' => 'Test Created CH Fund 1',
+      'option_group_id' => 'ch_fund',
+      'value' => 'CH+99999',
+    ]);
+    $chFundMap = $this->callAPISuccess('OptionValueCH', 'get', ['value' => 'CH+99999']);
+    // change CH Fund option value
+    $this->callAPISuccess('OptionValueCH', 'create', ['value' => 'CH+1000000', 'id' => $chFundMap['id']]);
+
+    // ensure that option value is changed
+    $actualOptionValue = $this->callAPISuccess('OptionValue', 'getvalue', ['id' => $chFund['id'], 'return' => 'value']);
+    $this->assertEquals('CH+1000000', $actualOptionValue);
+
+    // delete created values
+    $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
+    $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
+    $this->assertEmpty($updatedMap['values']);
+  }
+
 }

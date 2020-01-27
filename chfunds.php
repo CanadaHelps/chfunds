@@ -172,6 +172,9 @@ function chfunds_civicrm_apiWrappers(&$wrappers, $apiRequest) {
       $wrappers[] = new CRM_OptionValue_DeleteAPIWrapper();
     }
   }
+  if ($apiRequest['entity'] == 'OptionValueCH' && $apiRequest['action'] == 'create') {
+    $wrappers[] = new CRM_OptionValueCH_CreateAPIWrapper();
+  }
 }
 
 function chfunds_civicrm_pageRun(&$page) {
