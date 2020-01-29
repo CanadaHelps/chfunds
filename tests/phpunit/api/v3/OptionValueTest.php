@@ -79,7 +79,7 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
     ]);
     $chFundMap = $this->callAPISuccess('OptionValueCH', 'get', ['value' => 'CH+99999']);
     // change CH Fund option value
-    $this->callAPISuccess('OptionValue', 'create', ['value' => 'CH+1000000', 'id' => $chFund['id']]);
+    $this->callAPISuccess('OptionValue', 'create', ['value' => 'CH+1000000', 'option_group_name' => 'ch_fund', 'id' => $chFund['id']]);
 
     // ensure that option value is changed
     $actualOptionValue = $this->callAPISuccess('OptionValueCH', 'getvalue', ['id' => $chFundMap['id'], 'return' => 'value']);

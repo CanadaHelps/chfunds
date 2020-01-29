@@ -4,8 +4,8 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
    * the wrapper contains a method that allows you to alter the parameters of the api request (including the action and the entity)
    */
   public function fromApiInput($apiRequest) {
-    if ($apiRequest['entity'] == 'OptionValue' && !empty($apiRequest['params']['option_group_id'])) {
-      $optionGroupID = $apiRequest['params']['option_group_id'];
+    if ($apiRequest['entity'] == 'OptionValue' && (!empty($apiRequest['params']['option_group_id']) || !empty($apiRequest['params']['option_group_name']))) {
+      $optionGroupID = CRM_Utils_Array::value('option_group_id', $apiRequest['params']) ?: $apiRequest['params']['option_group_name'];
       if ((is_string($optionGroupID) && $optionGroupID == 'ch_fund') ||
         (is_int($optionGroupID) &&
           (civicrm_api3('OptionGroup', 'getvalue', ['id' => $optionGroupID, 'return' => 'name']) == 'ch_fund')
