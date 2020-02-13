@@ -27,6 +27,7 @@ class CRM_OptionValueCH_CreateAPIWrapper implements API_Wrapper {
           'return' => 'id',
         ]);
         CRM_Core_DAO::executeQuery(sprintf("UPDATE civicrm_option_value SET `value` = '%s' WHERE id = %d", $apiRequest['params']['value'], $id));
+        CRM_Core_BAO_CustomOption::updateValue($id, $apiRequest['params']['value']);
       }
 
     }

@@ -192,4 +192,99 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->assertEmpty($updatedMap['values']);
   }
 
+  public function testContributionOnOptionvalueCHValueChange() {
+    $chFund = $this->callAPISuccess('OptionValue', 'create', [
+      'label' => 'Test Created CH Fund 1',
+      'option_group_id' => 'ch_fund',
+      'value' => 'CH+99999',
+    ]);
+
+    $contributionID = $this->callAPISuccess('CHContribution', 'create', [
+      'receive_date' => date('Ymd'),
+      'total_amount' => 100.00,
+      'payment_instrument_id' => 1,
+      'source' => 'SSF',
+      'contribution_status_id' => 1,
+      'ch_fund' => 'CH+99999'
+    ])['id'];
+    $contribution = $this->callAPISuccess('Contribution', 'getsingle', [
+      'id' => $contributionID,
+    ]);
+    // ensure that contribution Fund is assigned to 'Unassigned CH Fund'
+    $this->assertEquals($this->unallocatedFund['id'], $contribution['financial_type_id']);
+
+    // change the Fund of contribution to test that changing a CH fund option value doesn't impact the associated contribution's fund
+    $this->callAPISuccess('Contribution', 'create', [
+      'id' => $contributionID,
+      'financial_type_id' => $this->fund['id'],
+    ]);
+    $contribution = $this->callAPISuccess('Contribution', 'getsingle', [
+      'id' => $contributionID,
+    ]);
+    // ensure that contribution Fund is changed to new financial type
+    $this->assertEquals($this->fund['id'], $contribution['financial_type_id']);
+
+
+    $chFundMap = $this->callAPISuccess('OptionValueCH', 'get', ['value' => 'CH+99999']);
+    // change CH Fund option value
+    $this->callAPISuccess('OptionValueCH', 'create', ['value' => 'CH+1000000', 'id' => $chFundMap['id']]);
+
+    // ensure that option value is changed
+    $actualOptionValue = $this->callAPISuccess('OptionValue', 'getvalue', ['id' => $chFund['id'], 'return' => 'value']);
+    $this->assertEquals('CH+1000000', $actualOptionValue);
+
+    // ensure that contribution's CH Fund is also updated
+    $contribution = $this->callAPISuccess('Contribution', 'getsingle', [
+      'id' => $contributionID,
+      'return' => ['custom_' . $this->customField['id'], 'financial_type_id'],
+    ]);
+    // ensure that the value of the custom field is changed
+    $this->assertEquals('CH+1000000', $contribution['custom_' . $this->customField['id']]);
+    $this->assertEquals($this->fund['id'], $contribution['financial_type_id']);
+
+    // delete created values
+    $this->callAPISuccess('contribution', 'delete', ['id' => $contributionID]);
+    $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
+    $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
+    $this->assertEmpty($updatedMap['values']);
+  }
+
+  public function testContributionOnOptionvalueCHFundChange() {
+      $chFund = $this->callAPISuccess('OptionValue', 'create', [
+      'label' => 'Test Created CH Fund 1',
+      'option_group_id' => 'ch_fund',
+      'value' => 'CH+99999',
+    ]);
+
+    $contributionID = $this->callAPISuccess('CHContribution', 'create', [
+      'receive_date' => date('Ymd'),
+      'total_amount' => 100.00,
+      'payment_instrument_id' => 1,
+      'source' => 'SSF',
+      'contribution_status_id' => 1,
+      'ch_fund' => 'CH+99999'
+    ])['id'];
+    $contribution = $this->callAPISuccess('Contribution', 'getsingle', [
+      'id' => $contributionID,
+    ]);
+    // ensure that contribution Fund is assigned to 'Unassigned CH Fund'
+    $this->assertEquals($this->unallocatedFund['id'], $contribution['financial_type_id']);
+
+
+    $chFundMap = $this->callAPISuccess('OptionValueCH', 'get', ['value' => 'CH+99999']);
+    // change Fund value in the mapping
+    $this->callAPISuccess('OptionValueCH', 'create', ['fund' => $this->fund['id'], 'id' => $chFundMap['id']]);
+
+    // check there is entry in contribution batch table to mark this change in fund value
+    $result = CRM_Core_DAO::executeQuery("SELECT * FROM civicrm_ch_contribution_batch ")->fetchAll();
+    $this->assertNotEmpty($result);
+    $this->assertEquals($this->fund['id'], $result['fund']);
+
+    // delete created values
+    $this->callAPISuccess('contribution', 'delete', ['id' => $contributionID]);
+    $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
+    $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
+    $this->assertEmpty($updatedMap['values']);
+  }
+
 }
