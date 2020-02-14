@@ -48,6 +48,12 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
    * Should we destroy the custom fields that we create or not
    * @var bool
    */
+ /**
+  * Contact ID
+  * @var int
+  */
+  protected $individualID;
+
   protected $tearDownCustomField = TRUE;
 
   public function setUpHeadless() {
@@ -107,6 +113,7 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
       'is_deductible' => 1,
     ]);
     $this->unallocatedFund = $this->callAPISuccess('FinancialType', 'get', ['name' => 'Unassigned CH Fund']);
+    $this->individualID =  $this->callAPISuccess('Contact', 'create', ['first_name' => 'Alan', 'last_name' => 'MouseMouse', 'contact_type' => 'Individual'])['id'];
   }
 
   public function tearDown() {
@@ -116,6 +123,7 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
       $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
     }
     $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund['id']]);
+    $this->callAPISuccess('Contact', 'delete', ['id' => $this->individualID]);
   }
 
   public function testMappingOnOptionvalueValueChange() {
@@ -135,7 +143,7 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
     // To ensure that linked associated Fund is not changed, lets change the Fund to something else, other then 'Unassigned CH Fund' say 'Test Created Fund'
     //  and later on CH Fund value change ensure that Fund corresponding mappinh is still the same
     $this->callAPISuccess('OptionValueCH', 'create', ['id' => $chFundMap['id'], 'financial_type_id' => $this->fund['id']]);
-    $chFundMap = $this->callAPISuccess('OptionValueCH', 'getsingle', ['id' => $chFundMap['id']);
+    $chFundMap = $this->callAPISuccess('OptionValueCH', 'getsingle', ['id' => $chFundMap['id']]);
      // 1. Ensure that fund is changed successfully
     $this->assertEquals($this->fund['id'], $chFundMap['financial_type_id']);
     // 2. Change the optionValue again and check that option value is changed but NOT the associated Fund
@@ -166,7 +174,8 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
       'payment_instrument_id' => 1,
       'source' => 'SSF',
       'contribution_status_id' => 1,
-      'ch_fund' => 'CH+99999'
+      'ch_fund' => 'CH+99999',
+      'contact_id' => $this->individualID,
     ])['id'];
     $contribution = $this->callAPISuccess('Contribution', 'getsingle', [
       'id' => $contributionID,
