@@ -102,7 +102,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
         'option_group_id' => 'ch_fund',
         'is_searchable' => 1,
         'is_active' => 1,
-        'html_type' => 'ContactReference',
+        'html_type' => 'Select',
       ]);
     }
     else {
@@ -126,6 +126,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     }
     $this->callAPISuccess('FinancialType', 'get', ['id' => $this->fund['id'], 'api.FinancialType.delete' => '"id":"$value.id"']);
     $this->callAPISuccess('Contact', 'delete', ['id' => $this->individualID]);
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch ");
   }
 
   /**
@@ -249,7 +250,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     // ensure that one line-item is present
     $this->assertEquals(1, $lineItem['count']);
     // ensure that associated line-item has correct financial item linked to it
-    $this->assertEquals($this->fund['id'], $lineitem[0]['financial_type_id']);
+    $this->assertEquals($this->fund['id'], $lineItem['values'][0]['financial_type_id']);
     $totalFinancialItem = $this->callAPISuccess('FinancialItem', 'getcount', [
       'entity_table' => 'civicrm_line_item',
       'entity_id' => $lineItem['id'],
@@ -291,7 +292,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
 
     $chFundMap = $this->callAPISuccess('OptionValueCH', 'getsingle', ['value' => 'CH+99999']);
     // change Fund value in the mapping
-    $this->callAPISuccess('OptionValueCH', 'create', ['fund' => $this->fund['id'], 'id' => $chFundMap['id']]);
+    $result = $this->callAPISuccess('OptionValueCH', 'create', ['financial_type_id' => $this->fund['id'], 'id' => $chFundMap['id']]);
 
     // check there is entry in contribution batch table to mark this change in fund value
     $result = CRM_Core_DAO::executeQuery("SELECT * FROM civicrm_ch_contribution_batch ")->fetchAll();
@@ -306,7 +307,6 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
     $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
     $this->assertEmpty($updatedMap['values']);
-    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch ");
   }
 
 }

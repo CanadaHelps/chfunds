@@ -26,8 +26,10 @@ class CRM_OptionValueCH_CreateAPIWrapper implements API_Wrapper {
           'option_group_id' => is_int($optionGroupID) ? $optionGroupID : civicrm_api3('OptionGroup', 'getvalue', ['name' => 'ch_fund', 'return' => 'id']),
           'return' => 'id',
         ]);
-        CRM_Core_DAO::executeQuery(sprintf("UPDATE civicrm_option_value SET `value` = '%s' WHERE id = %d", $apiRequest['params']['value'], $id));
-        CRM_Core_BAO_CustomOption::updateValue($id, $apiRequest['params']['value']);
+        CRM_Core_BAO_OptionValue::create([
+          'id' => $id,
+          'value' => $apiRequest['params']['value'],
+        ]);
       }
 
     }
