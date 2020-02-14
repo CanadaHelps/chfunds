@@ -122,7 +122,7 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
       $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
       $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
     }
-    $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund['id']]);
+    $this->callAPISuccess('FinancialType', 'get', ['id' => $this->fund['id'], 'api.FinancialType.delete' => '"id":"$value.id"']);
     $this->callAPISuccess('Contact', 'delete', ['id' => $this->individualID]);
   }
 

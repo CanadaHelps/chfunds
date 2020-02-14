@@ -100,8 +100,8 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase imple
       $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
       $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
     }
-    $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund2['id']]);
-    $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund['id']]);
+    $this->callAPISuccess('FinancialType', 'get', ['id' => $this->fund2['id'], 'api.FinancialType.delete' => '"id":"$value.id"']);
+    $this->callAPISuccess('FinancialType', 'get', ['id' => $this->fund['id'], 'api.FinancialType.delete' => '"id":"$value.id"']);
   }
 
   /**

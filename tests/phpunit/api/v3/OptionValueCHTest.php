@@ -124,7 +124,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
       $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
       $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
     }
-    $this->callAPISuccess('FinancialType', 'delete', ['id' => $this->fund['id']]);
+    $this->callAPISuccess('FinancialType', 'get', ['id' => $this->fund['id'], 'api.FinancialType.delete' => '"id":"$value.id"']);
     $this->callAPISuccess('Contact', 'delete', ['id' => $this->individualID]);
   }
 
@@ -306,7 +306,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
     $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
     $this->assertEmpty($updatedMap['values']);
-    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch ")
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch ");
   }
 
 }
