@@ -126,7 +126,6 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     }
     $this->callAPISuccess('FinancialType', 'get', ['id' => $this->fund['id'], 'api.FinancialType.delete' => '"id":"$value.id"']);
     $this->callAPISuccess('Contact', 'delete', ['id' => $this->individualID]);
-    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch ");
   }
 
   /**
@@ -181,6 +180,12 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->assertEmpty($updatedMap['values']);
   }
 
+  /**
+   * Test OptionValue if its value is updated if the OptionValueCH mapping is changed by updating the optionValue value
+   *  1. Create a option Value
+   *  2. Update the associated OptionValueCH mapping by changing its value from 'CH+99999' to 'CH1000000'
+   *  3. Check corresponding OptionValue value if its updated or not
+   */
   public function testCreateOptionValueChange() {
     $chFund = $this->callAPISuccess('OptionValue', 'create', [
       'label' => 'Test Created CH Fund 1',
@@ -201,6 +206,14 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->assertEmpty($updatedMap['values']);
   }
 
+  /**
+   * Test Contribution after a we update the OptionValue-Fund mapping by changing the OptionValue
+   *  1. Create a option Value
+   *  2. Create a contribution with ch_fund custom field which uses same option value
+   *  3. Update the mapping by changing the optionvalue from 'CH+99999' to 'CH1000000'
+   *  4. Check contribution's CH Fund value to ensure that its value is updated
+   *  5. Check contribution's financial item and line item to ensure that no additional entry are made for optionValue change
+   */
   public function testContributionOnOptionvalueCHValueChange() {
     $chFund = $this->callAPISuccess('OptionValue', 'create', [
       'label' => 'Test Created CH Fund 1',
@@ -264,6 +277,13 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->assertEmpty($updatedMap['values']);
   }
 
+  /**
+   * Test Contribution after a we update the OptionValue-Fund mapping by changing the Fund
+   *  1. Create a option Value
+   *  2. Create a contribution with ch_fund custom field which uses same option value and 'Unassigned CH Fund'
+   *  3. Update the mapping by changing the fund from 'Unassigned CH Fund' to 'Test Created Fund'
+   *  4. Check batch table to ensure that contribution is in queue, so that can be later processed to update its Fund to 'Test Created Fund'
+   */
   public function testContributionOnOptionvalueCHFundChange() {
       $chFund = $this->callAPISuccess('OptionValue', 'create', [
       'label' => 'Test Created CH Fund 1',
@@ -303,6 +323,7 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->assertEquals($this->fund['id'], $result[0]['fund']);
 
     // delete created values
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch WHERE contribution_id = $contributionID");
     $this->callAPISuccess('contribution', 'delete', ['id' => $contributionID]);
     $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
     $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);

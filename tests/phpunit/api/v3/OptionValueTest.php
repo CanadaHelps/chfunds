@@ -122,10 +122,16 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
       $this->callAPISuccess('CustomField', 'delete', ['id' => $this->customField['id']]);
       $this->callAPISuccess('CustomGroup', 'delete', ['id' => $this->customGroup['id']]);
     }
-    $this->callAPISuccess('FinancialType', 'get', ['id' => $this->fund['id'], 'api.FinancialType.delete' => '"id":"$value.id"']);
+    $this->callAPISuccess('FinancialType', 'get', ['id' => $this->fund['id'], 'api.FinancialType.delete' => ["id" => "\$value.id"]]);
     $this->callAPISuccess('Contact', 'delete', ['id' => $this->individualID]);
   }
 
+  /**
+   * Test OptionValueCH if its value is updated if the OptionValue value is changed by updating its value
+   *  1. Create a option Value
+   *  2. Update the optionValue value from 'CH+99999' to 'CH1000000'
+   *  3. Check corresponding OptionValueCH mapping, if its value is updated or not
+   */
   public function testMappingOnOptionvalueValueChange() {
     $chFund = $this->callAPISuccess('OptionValue', 'create', [
       'label' => 'Test Created CH Fund 1',
@@ -161,6 +167,14 @@ class api_v3_OptionValueTest extends \PHPUnit\Framework\TestCase implements Head
     $this->assertEmpty($updatedMap['values']);
   }
 
+  /**
+   * Test Contribution after a we update the OptionValue value
+   *  1. Create a option Value
+   *  2. Create a contribution with ch_fund custom field which uses same option value
+   *  3. Update the optionvalue value from 'CH+99999' to 'CH1000000'
+   *  4. Check contribution's CH Fund value to ensure that its value is updated
+   *  5. Check mapping data to ensure the OptionValue value is also updated there
+   */
   public function testContributionOnOptionvalueValueChange() {
     $chFund = $this->callAPISuccess('OptionValue', 'create', [
       'label' => 'Test Created CH Fund 1',
