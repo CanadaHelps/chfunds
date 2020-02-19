@@ -26,6 +26,18 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
     return TRUE;
   }
 
+  public function upgrade_1300() {
+    $this->ctx->log->info('Applying update 1.3');
+    $sql = "
+    ALTER TABLE `civicrm_ch_contribution_batch`
+      CHANGE `ch_fund` `ch_fund` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+      CHANGE `fund` `fund` INT(11) NOT NULL,
+      CHANGE `contribution_id` `contribution_id` INT(11) NOT NULL;
+    ";
+    CRM_Core_DAO::executeQuery($sql);
+    return TRUE;
+  }
+
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
 
