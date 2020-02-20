@@ -330,4 +330,50 @@ class api_v3_OptionValueCHTest extends \PHPUnit\Framework\TestCase implements He
     $this->assertEmpty($updatedMap['values']);
   }
 
+  public function testLongOptionValueIdChFundChange() {
+     $chFund = $this->callAPISuccess('OptionValue', 'create', [
+      'label' => 'Test Created CH Fund 1',
+      'option_group_id' => 'ch_fund',
+      'value' => 'CH+9999999999',
+    ]);
+
+    $contributionID = $this->callAPISuccess('CHContribution', 'create', [
+      'receive_date' => date('Ymd'),
+      'total_amount' => 100.00,
+      'payment_instrument_id' => 1,
+      'source' => 'SSF',
+      'contribution_status_id' => 1,
+      'ch_fund' => 'CH+9999999999',
+      'contact_id' => $this->individualID,
+    ])['id'];
+    $contribution = $this->callAPISuccess('Contribution', 'getsingle', [
+      'id' => $contributionID,
+    ]);
+    // ensure that contribution Fund is assigned to 'Unassigned CH Fund'
+    $this->assertEquals($this->unallocatedFund['id'], $contribution['financial_type_id']);
+
+    $result = CRM_Core_DAO::executeQuery("SELECT * FROM civicrm_ch_contribution_batch ")->fetchAll();
+    // ensure that the queue is empty before updating the mapping by changing the fund value
+    $this->assertEmpty($result);
+
+    $chFundMap = $this->callAPISuccess('OptionValueCH', 'getsingle', ['value' => 'CH+9999999999']);
+    // change Fund value in the mapping
+    $result = $this->callAPISuccess('OptionValueCH', 'create', ['financial_type_id' => $this->fund['id'], 'id' => $chFundMap['id']]);
+
+    // check there is entry in contribution batch table to mark this change in fund value
+    $result = CRM_Core_DAO::executeQuery("SELECT * FROM civicrm_ch_contribution_batch ")->fetchAll();
+    $this->assertNotEmpty($result);
+    $this->assertEquals(1, count($result));
+    // ensure the contribution which needs to be updated is present in the queue
+    $this->assertEquals($contributionID, $result[0]['contribution_id']);
+    $this->assertEquals($this->fund['id'], $result[0]['fund']);
+
+    // delete created values
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch WHERE contribution_id = %1", [1 => [$contributionID, 'Positive']]);
+    $this->callAPISuccess('contribution', 'delete', ['id' => $contributionID]);
+    $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
+    $updatedMap = $this->callAPISuccess('OptionValueCH', 'get', []);
+    $this->assertEmpty($updatedMap['values']);
+  }
+
 }
