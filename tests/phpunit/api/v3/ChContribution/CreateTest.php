@@ -165,6 +165,7 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase imple
     $this->callAPISuccess('Contribution', 'delete', ['id' => $contribution['id']]);
     $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
     $this->callAPISuccess('Contact', 'delete', ['id' => $contact, 'skip_undelete' => TRUE]);
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch WHERE contribution_id = %1", [1 => [$contribution['id'], 'Positive']]);
   }
 
 }
