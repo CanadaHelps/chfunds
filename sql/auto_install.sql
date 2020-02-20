@@ -96,8 +96,9 @@ CREATE TABLE `civicrm_option_value_ch` (
 )    ;
 
 CREATE TABLE IF NOT EXISTS `civicrm_ch_contribution_batch` (
-   `id` INT NOT NULL AUTO_INCREMENT , `ch_fund` VARCHAR(10) NOT NULL ,
-   `fund` INT(4) NOT NULL ,
-   `contribution_id` INT(10) NOT NULL ,
+   `id` INT NOT NULL AUTO_INCREMENT ,
+   `ch_fund` varchar(255) COLLATE utf8_unicode_ci NOT NULL ,
+   `fund` INT(11) NOT NULL ,
+   `contribution_id` INT(11) NOT NULL ,
   PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
