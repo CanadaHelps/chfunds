@@ -175,6 +175,9 @@ function chfunds_civicrm_apiWrappers(&$wrappers, $apiRequest) {
   if ($apiRequest['entity'] == 'OptionValueCH' && $apiRequest['action'] == 'create') {
     $wrappers[] = new CRM_OptionValueCH_CreateAPIWrapper();
   }
+  if ($apiRequest['entity'] == 'ContributionPage' && $apiRequest['action'] == 'create') {
+    $wrappers[] = new CRM_ContributionPage_CreateAPIWrapper();
+  }
 }
 
 function chfunds_civicrm_pageRun(&$page) {
@@ -341,6 +344,10 @@ function chfunds_civicrm_postProcess($formName, &$form) {
       'is_enabled_in_ch' => $params['is_enabled_in_ch'],
     ]);
     E::updateCHContribution($params['financial_type_id'], $params['value']);
+  }
+  if ($formName == 'CRM_Contribute_Form_ContributionPage_Settings') {
+    $params = $form->exportValues();
+    E::updateContributionCampaign($params['campaign_id'] ?? 0, $this->getVar('_id'));
   }
 }
 

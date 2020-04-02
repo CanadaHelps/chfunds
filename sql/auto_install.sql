@@ -102,3 +102,10 @@ CREATE TABLE IF NOT EXISTS `civicrm_ch_contribution_batch` (
    `contribution_id` INT(11) NOT NULL ,
   PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `civicrm_ch_campaign_contribution_batch` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `contribution_id` INT UNSIGNED NOT NULL,
+  `campaign_id` INT NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE = InnoDB;

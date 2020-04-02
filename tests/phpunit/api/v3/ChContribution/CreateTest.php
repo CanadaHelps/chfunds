@@ -2,7 +2,7 @@
 
 use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;
-use CRM_Chfunds_ExtensionUtil as E;
+use CRM_Chfunds_Utils as E;
 
 /**
  * ChContribution.Create API Test Case
@@ -166,6 +166,55 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase imple
     $this->callAPISuccess('OptionValue', 'delete', ['id' => $chFund['id']]);
     $this->callAPISuccess('Contact', 'delete', ['id' => $contact, 'skip_undelete' => TRUE]);
     CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch WHERE contribution_id = %1", [1 => [$contribution['id'], 'Positive']]);
+  }
+
+  public function testUpdateContributionCampaignGroupFromCampaign() {
+    $chFund = $this->callAPISuccess('OptionValue', 'create', [
+      'label' => 'Test Created CH Fund 1',
+      'option_group_id' => 'ch_fund',
+      'value' => 'CH+99999',
+    ]);
+    $chFundMap = $this->callAPISuccess('OptionValueCH', 'get', ['value' => 'CH+99999']);
+    $contact = $this->individualCreate();
+    $this->callAPISuccess('OptionValueCH', 'create', ['financial_type_id' => $this->fund['id'], 'id' => $chFundMap['id']]);
+    $contributionPage = $this->callAPISuccess('ContributionPage', 'create', [
+      'title' => 'Test Contribution Page',
+      'financial_type_id' => 1,
+      'currency' => 'AUD',
+      'goal_amount' => 600,
+      'is_pay_later' => 1,
+      'pay_later_text' => 'Send check',
+      'is_monetary' => TRUE,
+      'is_email_receipt' => TRUE,
+      'receipt_from_email' => 'yourconscience@donate.com',
+      'receipt_from_name' => 'Ego Freud',
+    ]);
+    $contribution = $this->callAPISuccess('CHContribution', 'create', [
+      'contact_id' => $contact,
+      'ch_fund' => 'CH+99999',
+      'payment_instrument_id' => 'Credit Card',
+      'total_amount' => '100',
+      'contribution_page_id' => $contributionPage['id'],
+    ]);
+    $this->assertTrue(empty($contribution['values'][$contribution['id']]['campaign_id']));
+    $campaign = $this->callAPISuccess('Campaign', 'create', [
+      'title' => "campaign title",
+      'description' => "Call people, ask for money",
+      'created_date' => 'first sat of July 2008',
+    ]);
+    $this->callAPISuccess('ContributionPage', 'create', [
+      'id' => $contributionPage['id'],
+      'campaign_id' => $campaign['id'],
+    ]);
+    $contributionGet = $this->callAPISuccess('Contribution', 'getsingle', ['id' => $contribution['id']]);
+    $this->assertTrue(empty($contributionGet['campaign_id']));
+    $this->callAPISuccess('Job', 'update_c_h_campaign_contribution', []);
+    $contributionGet = $this->callAPISuccess('Contribution', 'getsingle', ['id' => $contribution['id']]);
+    $this->assertEquals($campaign['id'], $contributionGet['campaign_id']);
+    $this->callAPISuccess('Contribution', 'delete', ['skip_undelete' => 1, 'id' => $contribution['id']]);
+    $this->callAPISuccess('ContributionPage', 'delete', ['skip_undelete' => 1, 'id' => $contributionPage['id']]);
+    $this->callAPISuccess('Campaign', 'delete', ['skip_undelete' => 1, 'id' => $campaign['id']]);
+    $this->callAPISuccess('Contact', 'delete', ['skip_undelete' => 1, 'id' => $contact]);
   }
 
 }
