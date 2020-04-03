@@ -102,7 +102,7 @@ class CRM_Chfunds_Utils {
           }
         }
         if (!empty($values)) {
-          $sql = "INSERT INTO civicrm_ch_contribution_batch(`ch_fund`, `fund`, `contribution_id`) VALUES " . implode(', ', $values) . " ;";
+          $sql = "INSERT INTO civicrm_ch_contribution_batch(`ch_fund`, `fund`, `contribution_id`) VALUES " . implode(', ', $values) . " ON DUPLICATE KEY UPDATE ch_fund=VALUES(ch_fund), fund=VALUES(fund);";
           CRM_Core_DAO::executeQuery($sql);
         }
         $offset += $batchSize + 1;
@@ -150,7 +150,7 @@ class CRM_Chfunds_Utils {
           }
         }
         if (!empty($values)) {
-          $sql = "INSERT INTO civicrm_ch_contribution_batch(`contribution_id`, `campaign_id`) VALUES " . implode(', ', $values) . " ;";
+          $sql = "INSERT INTO civicrm_ch_contribution_batch(`contribution_id`, `campaign_id`) VALUES " . implode(', ', $values) . " ON DUPLICATE KEY UPDATE campaign_id=VALUES(campaign_id);";
           CRM_Core_DAO::executeQuery($sql);
         }
         $offset += $batchSize + 1;

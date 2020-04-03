@@ -101,5 +101,6 @@ CREATE TABLE IF NOT EXISTS `civicrm_ch_contribution_batch` (
    `fund` INT(11) NULL DEFAULT NULL ,
    `contribution_id` INT(11) NOT NULL ,
    `campaign_id` INT NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY unique_contribution (contribution_id)
 ) ENGINE = InnoDB;

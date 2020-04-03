@@ -44,6 +44,10 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
       ALTER TABLE `civicrm_ch_contribution_batch` ADD COLUMN `campaign_id` INT NOT NULL
     ";
     CRM_Core_DAO::executeQuery($sql);
+    $sql = "
+      ALTER TABLE `civicrm_ch_contribution_batch` ADD CONSTRAINT `unique_contribution` UNIQUE KEY (`contribution_id`)
+    ";
+    CRM_Core_DAO::executeQuery($sql);
     return TRUE;
   }
 
