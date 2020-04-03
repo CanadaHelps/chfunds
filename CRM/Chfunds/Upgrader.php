@@ -41,7 +41,7 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
   public function upgrade_1400() {
     $this->ctx->log->info('Applying update 1.4');
     $sql = "
-      ALTER TABLE `civicrm_ch_contribution_batch` ADD COLUMN `campaign_id` INT NOT NULL,
+      ALTER TABLE `civicrm_ch_contribution_batch` ADD COLUMN `campaign_id` INT NULL DEFAULT NULL,
       CHANGE `ch_fund` `ch_fund` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL DEFAULT NULL,
       CHANGE `fund` `fund` INT(11) NULL DEFAULT NULL
     ";

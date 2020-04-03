@@ -3,7 +3,7 @@
 require_once 'chfunds.civix.php';
 require_once 'chfunds.permitted-roles.php';
 
-use CRM_Chfunds_ExtensionUtil as E;
+use CRM_Chfunds_Utils as E;
 
 /**
  * Implements hook_civicrm_config().
@@ -347,7 +347,7 @@ function chfunds_civicrm_postProcess($formName, &$form) {
   }
   if ($formName == 'CRM_Contribute_Form_ContributionPage_Settings') {
     $params = $form->exportValues();
-    E::updateContributionCampaign($params['campaign_id'] ?? 0, $this->getVar('_id'));
+    E::updateContributionCampaign($params['campaign_id'] ?? 0, $form->getVar('_id'));
   }
 }
 
