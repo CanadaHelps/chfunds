@@ -150,7 +150,7 @@ class CRM_Chfunds_Utils {
           }
         }
         if (!empty($values)) {
-          $sql = "INSERT INTO civicrm_ch_campaign_contribution_batch(`contribution_id`, `campaign_id`) VALUES " . implode(', ', $values) . " ;";
+          $sql = "INSERT INTO civicrm_ch_contribution_batch(`contribution_id`, `campaign_id`) VALUES " . implode(', ', $values) . " ;";
           CRM_Core_DAO::executeQuery($sql);
         }
         $offset += $batchSize + 1;

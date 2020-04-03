@@ -41,12 +41,8 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
   public function upgrade_1400() {
     $this->ctx->log->info('Applying update 1.4');
     $sql = "
-      CREATE TABLE IF NOT EXISTS `civicrm_ch_campaign_contribution_batch` (
-        `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-        `contribution_id` INT UNSIGNED NOT NULL,
-        `campaign_id` INT NOT NULL,
-        PRIMARY KEY (`id`)
-      ) ENGINE = InnoDB;";
+      ALTER TABLE `civicrm_ch_contribution_batch` ADD COLUMN `campaign_id` INT NOT NULL
+    ";
     CRM_Core_DAO::executeQuery($sql);
     return TRUE;
   }

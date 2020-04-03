@@ -208,7 +208,7 @@ class api_v3_ChContribution_CreateTest extends \PHPUnit\Framework\TestCase imple
     ]);
     $contributionGet = $this->callAPISuccess('Contribution', 'getsingle', ['id' => $contribution['id']]);
     $this->assertTrue(empty($contributionGet['campaign_id']));
-    $this->callAPISuccess('Job', 'update_c_h_campaign_contribution', []);
+    $this->callAPISuccess('Job', 'update_c_h_contributions', []);
     $contributionGet = $this->callAPISuccess('Contribution', 'getsingle', ['id' => $contribution['id']]);
     $this->assertEquals($campaign['id'], $contributionGet['campaign_id']);
     $this->callAPISuccess('Contribution', 'delete', ['skip_undelete' => 1, 'id' => $contribution['id']]);
