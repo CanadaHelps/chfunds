@@ -371,6 +371,14 @@ function chfunds_civicrm_entityTypes(&$entityTypes) {
   _chfunds_civix_civicrm_entityTypes($entityTypes);
 }
 
+function chfunds_civicrm_pre($op, $objectName, $id, &$params) {
+  if ($objectName === 'Contribution' && $op == 'create') {
+    if (!empty($params['contribution_page_id'])) {
+      $params['campaign_id'] = CRM_Utils_Array::value('campaign_id', $params, CRM_Utils_Array::value('campaign_id', civicrm_api3('ContributionPage', 'getsingle', ['id' => $params['contribution_page_id']])));
+    }
+  }
+}
+
 // --- Functions below this ship commented out. Uncomment as required. ---
 
 /**
