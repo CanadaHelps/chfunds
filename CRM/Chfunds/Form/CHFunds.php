@@ -1,6 +1,6 @@
 <?php
 
-use CRM_Chfunds_ExtensionUtil as E;
+use CRM_Chfunds_Utils as E;
 
 /**
  * Form controller class

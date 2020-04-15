@@ -3,7 +3,7 @@
 require_once 'chfunds.civix.php';
 require_once 'chfunds.permitted-roles.php';
 
-use CRM_Chfunds_ExtensionUtil as E;
+use CRM_Chfunds_Utils as E;
 
 /**
  * Implements hook_civicrm_config().
@@ -175,6 +175,9 @@ function chfunds_civicrm_apiWrappers(&$wrappers, $apiRequest) {
   if ($apiRequest['entity'] == 'OptionValueCH' && $apiRequest['action'] == 'create') {
     $wrappers[] = new CRM_OptionValueCH_CreateAPIWrapper();
   }
+  if ($apiRequest['entity'] == 'ContributionPage' && $apiRequest['action'] == 'create') {
+    $wrappers[] = new CRM_ContributionPage_CreateAPIWrapper();
+  }
 }
 
 function chfunds_civicrm_pageRun(&$page) {
@@ -342,6 +345,10 @@ function chfunds_civicrm_postProcess($formName, &$form) {
     ]);
     E::updateCHContribution($params['financial_type_id'], $params['value']);
   }
+  if ($formName == 'CRM_Contribute_Form_ContributionPage_Settings') {
+    $params = $form->exportValues();
+    E::updateContributionCampaign($params['campaign_id'] ?? 0, $form->getVar('_id'));
+  }
 }
 
 /**
@@ -362,6 +369,14 @@ function chfunds_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
  */
 function chfunds_civicrm_entityTypes(&$entityTypes) {
   _chfunds_civix_civicrm_entityTypes($entityTypes);
+}
+
+function chfunds_civicrm_pre($op, $objectName, $id, &$params) {
+  if ($objectName === 'Contribution' && $op == 'create') {
+    if (!empty($params['contribution_page_id'])) {
+      $params['campaign_id'] = CRM_Utils_Array::value('campaign_id', $params, CRM_Utils_Array::value('campaign_id', civicrm_api3('ContributionPage', 'getsingle', ['id' => $params['contribution_page_id']])));
+    }
+  }
 }
 
 // --- Functions below this ship commented out. Uncomment as required. ---
