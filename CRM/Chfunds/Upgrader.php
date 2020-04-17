@@ -53,6 +53,27 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
     return TRUE;
   }
 
+  public function upgrade_1500() {
+    $this->ctx->log->info('Applying update 1.5');
+
+    $revenueFinancialAccountTypeID = array_search('Revenue', CRM_Core_OptionGroup::values('financial_account_type', FALSE, FALSE, FALSE, NULL, 'name'));
+
+    if ($revenueFinancialAccountTypeID) {
+      $sql = "
+        UPDATE civicrm_financial_account fa INNER JOIN (
+        SELECT fa.id, ft.name
+        FROM civicrm_financial_account fa
+        INNER JOIN civicrm_entity_financial_account efa ON efa.financial_account_id = fa.id AND fa.financial_account_type_id = $revenueFinancialAccountTypeID
+        INNER JOIN civicrm_financial_type ft ON ft.id = efa.entity_id AND efa.entity_table = 'civicrm_financial_type'
+        WHERE fa.name='Donation' AND ft.name='General Fund' ) temp ON temp.id = fa.id
+        SET fa.name = temp.name
+        ";
+        CRM_Core_DAO::executeQuery($sql);
+    }
+
+    return TRUE;
+  }
+
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
 
