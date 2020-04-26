@@ -349,6 +349,14 @@ function chfunds_civicrm_postProcess($formName, &$form) {
     $params = $form->exportValues();
     E::updateContributionCampaign($params['campaign_id'] ?? 0, $form->getVar('_id'));
   }
+  if ('CRM_Financial_Form_FinancialType' == $formName && empty($form->getVar('_id'))) {
+    if ($fundName = CRM_Utils_Array::value('name', $form->exportValues())) {
+      $financialTypeID = civicrm_api3('FinancialType', 'getvalue', ['name'  =>  $fundName, 'options' =>  ['limit' => 1], 'return' => 'id']);
+      if ($financialTypeID) {
+        E::removeCoSAssignmentFromFund($financialTypeID);
+      }
+    }
+  }
 }
 
 /**
