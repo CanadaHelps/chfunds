@@ -222,6 +222,16 @@ function chfunds_civicrm_pageRun(&$page) {
 }
 
 function chfunds_civicrm_buildForm($formName, &$form) {
+  if ('CRM_Contribute_Form_Task_PDFLetter' == $formName) {
+    unset($form->_elements[$form->_elementIndex['document_file']], $form->_elements[$form->_duplicateIndex['document_file'][0]]);
+    unset($form->_elementIndex['document_file'], $form->_duplicateIndex['document_file']);
+
+    CRM_Core_Resources::singleton()->addScript(
+      "CRM.$(function($) {
+        $('#template').parent().html($('#template').parent().html().replace('OR', ''));
+      });"
+    );
+  }
   if ($formName == 'CRM_Financial_Form_FinancialAccount' && !($form->_action & CRM_Core_Action::DELETE)) {
     if ($form->_action & CRM_Core_Action::UPDATE) {
       $form->setDefaults(['contact_id' => CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Domain', CRM_Core_Config::domainID(), 'contact_id')]);
