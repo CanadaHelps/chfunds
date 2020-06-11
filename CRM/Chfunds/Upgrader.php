@@ -85,7 +85,7 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
 
     $sql = "UPDATE civicrm_financial_trxn
       SET fee_amount = (0 - fee_amount),
-      net_amount = (total_amount - (0 - fee_amount))
+      net_amount = (total_amount - fee_amount)
       WHERE total_amount < 0
       AND fee_amount > 0
       AND to_financial_account_id IS NOT NULL
