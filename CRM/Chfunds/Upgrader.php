@@ -74,6 +74,12 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
     return TRUE;
   }
 
+  public function upgrade_1600() {
+    $this->ctx->log->info('Applying update 1.6: Setting custom translation function to be the chfunds translation function for check to cheque renaming');
+    Civi::settings()->set('customTranslateFunction', 'chfunds_translate');
+    return TRUE;
+  }
+
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
 
