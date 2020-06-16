@@ -424,3 +424,18 @@ function chfunds_translate($text, $params) {
   }
   return CRM_Core_I18n::singleton()->crm_translate($text, $params);
 }
+
+/**
+ * Implements hook_civicrm_validateForm().
+ *
+ * @see https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_validateForm/
+ */
+function chfunds_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
+  if ($formName === 'CRM_Contribute_Form_ContributionPage_Settings') {
+    if (array_key_exists('title', $form->_errors)) {
+      if ($form->_errors['title'] === 'Please do not use \'/\' in Title') {
+        unset($form->_errors['title']);
+      }
+    }
+  }
+}
