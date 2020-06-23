@@ -96,6 +96,25 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
     return TRUE;
   }
 
+  public function upgrade_1800() {
+    $this->ctx->log->info('Applying update 1.8');
+
+    $field = civicrm_api3('CustomField', 'get', [
+      'sequential' => 1,
+      'return' => ["id"],
+      'name' => "sg_flag",
+    ]);
+
+    if (!empty($field['id'])) {
+      civicrm_api3('CustomField', 'create', [
+        'sequential' => 1,
+        'id' => $field['id'],
+        'label' => "Recurring",
+      ]);
+    }
+    return TRUE;
+  }
+
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
 
