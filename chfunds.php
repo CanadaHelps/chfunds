@@ -387,30 +387,55 @@ function chfunds_civicrm_pre($op, $objectName, $id, &$params) {
   }
 }
 
-// --- Functions below this ship commented out. Uncomment as required. ---
+function chfunds_translate($text, $params) {
+  switch ($text) {
+    case 'unique transaction id. may be processor id, bank id + trans id, or account number + check number... depending on payment_method':
+      $text = 'unique transaction id. may be processor id, bank id + trans id, or account number + cheque number... depending on payment_method';
+      break;
+
+    case 'Check Number':
+      $text = 'Cheque Number';
+      break;
+
+    case 'This Transaction ID already exists in the database. Include the account number for checks.':
+      $text = 'This Transaction ID already exists in the database. Include the account number for cheques.';
+      break;
+
+    case 'Instructions added to Confirmation and Thank-you pages, as well as the confirmation email, when the user selects the \'pay later\' option (e.g. \'Mail your check to ... within 3 business days.\').':
+      $text = 'Instructions added to Confirmation and Thank-you pages, as well as the confirmation email, when the user selects the \'pay later\' option (e.g. \'Mail your cheque to ... within 3 business days.\').';
+      break;
+
+    case 'Record Contribution (Check, Cash, EFT ...)':
+      $text = 'Record Contribution (Cheque, Cash, EFT ...)';
+      break;
+
+    case 'I will send payment by check':
+      $text = 'I will send payment by cheque';
+      break;
+
+    case 'Check this box if you want to give users the option to submit payment offline (e.g. mail in a check, call in a credit card, etc.).':
+      $text = 'Check this box if you want to give users the option to submit payment offline (e.g. mail in a cheque, call in a credit card, etc.).';
+      break;
+
+    case "NOTE: Alternatively, you can enable the <strong>Pay Later</strong> feature below without setting up a payment processor. All users will then be asked to submit payment offline (e.g. mail in a check, call in a credit card, etc.).":
+      $text = 'NOTE: Alternatively, you can enable the <strong>Pay Later</strong> feature below without setting up a payment processor. All users will then be asked to submit payment offline (e.g. mail in a cheque, call in a credit card, etc.).';
+      break;
+
+  }
+  return CRM_Core_I18n::singleton()->crm_translate($text, $params);
+}
 
 /**
- * Implements hook_civicrm_preProcess().
+ * Implements hook_civicrm_validateForm().
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
- *
-function chfunds_civicrm_preProcess($formName, &$form) {
-
-} // */
-
-/**
- * Implements hook_civicrm_navigationMenu().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
- *
-function chfunds_civicrm_navigationMenu(&$menu) {
-  _chfunds_civix_insert_navigation_menu($menu, 'Mailings', array(
-    'label' => E::ts('New subliminal message'),
-    'name' => 'mailing_subliminal_message',
-    'url' => 'civicrm/mailing/subliminal',
-    'permission' => 'access CiviMail',
-    'operator' => 'OR',
-    'separator' => 0,
-  ));
-  _chfunds_civix_navigationMenu($menu);
-} // */
+ * @see https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_validateForm/
+ */
+function chfunds_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
+  if ($formName === 'CRM_Contribute_Form_ContributionPage_Settings') {
+    if (array_key_exists('title', $form->_errors)) {
+      if ($form->_errors['title'] === 'Please do not use \'/\' in Title') {
+        unset($form->_errors['title']);
+      }
+    }
+  }
+}
