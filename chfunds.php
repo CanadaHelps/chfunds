@@ -310,21 +310,6 @@ function chfunds_civicrm_buildForm($formName, &$form) {
     );
     $value->freeze();
   }
-  elseif ($formName == 'CRM_Contribute_Form_Contribution' && ($form->_action & CRM_Core_Action::UPDATE)) {
-    $fundCustomFieldID = civicrm_api3('CustomField', 'getvalue', ['name' => 'Fund', 'return' => 'id']);
-    $selector = 'custom_' . $fundCustomFieldID . '_';
-    CRM_Core_Resources::singleton()->addScript("
-      CRM.$(function($) {
-        $( document ).ajaxComplete(function(event, xhr, settings) {
-          var urlParts = settings.url.split('&');
-          console.log('$selector');
-          if (urlParts[1].includes('subType=') && urlParts[0].includes('civicrm/custom')) {
-            $('tr[class*=\"$selector\"]').insertAfter('tr.crm-contribution-form-block-financial_type_id');
-          }
-         });
-       });
-    ");
-  }
 }
 
 function chfunds_civicrm_postProcess($formName, &$form) {
