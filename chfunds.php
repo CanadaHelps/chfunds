@@ -222,6 +222,14 @@ function chfunds_civicrm_pageRun(&$page) {
 }
 
 function chfunds_civicrm_buildForm($formName, &$form) {
+  if ($formName == 'CRM_Contribute_Form_Contribution' && !($form->_action & CRM_Core_Action::DELETE)) {
+    CRM_Core_Resources::singleton()->addScript(
+      "CRM.$(function($) {
+        $('.crm-link-credit-card-mode a').text('Online Payment Contribution');
+        $('.crm-container .crm-error:not(.crm-error-label), .crm-container .crm-inline-error:not(.crm-error-label)').css({'color': 'black !important'});
+      });
+    ");
+  }
   if ($formName == 'CRM_Financial_Form_FinancialAccount' && !($form->_action & CRM_Core_Action::DELETE)) {
     if ($form->_action & CRM_Core_Action::UPDATE) {
       $form->setDefaults(['contact_id' => CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Domain', CRM_Core_Config::domainID(), 'contact_id')]);
