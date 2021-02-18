@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <extension key="biz.jmaconsulting.chfunds" type="module">
   <file>chfunds</file>
-  <name>CH Funds</name>
-  <description>FIXME</description>
+  <name>CanadaHelps Funds</name>
+  <description>Support mapping of CanadaHelps Funds to Financial Types</description>
   <license>AGPL-3.0</license>
   <maintainer>
     <author>JMA Consulting</author>
@@ -20,7 +20,7 @@
   <compatibility>
     <ver>5.20</ver>
   </compatibility>
-  <comments>This is a new, undeveloped module</comments>
+  <comments>Support mapping of CanadaHelps Funds to Financial Types</comments>
   <civix>
     <namespace>CRM/Chfunds</namespace>
   </civix>
