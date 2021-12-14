@@ -92,6 +92,20 @@ function _civicrm_api3_c_h_contribution_Create_spec(&$params) {
  * @throws API_Exception
  */
 function civicrm_api3_c_h_contribution_Create($params) {
+  if(isset($params['id'])) {
+    $customCHFundField = 'custom_' . E::getCHFundCustomID();
+    $contribution = civicrm_api3('Contribution', 'get', [
+      'return' => ["financial_type_id", $customCHFundField],
+      'sequential' => 1,
+      'id' => $params['id'],
+    ]);
+    if($contribution['values']) {
+      $params['financial_type_id'] = $contribution['values'][0]['financial_type_id'];
+      $params[$customCHFundField] = $contribution['values'][0][$customCHFundField];
+      return civicrm_api3('Contribution', 'create', $params);
+    }
+  }
+
   $chFund = CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
   $params['financial_type_id'] = E::getFinancialTypeByCHFund($chFund);
   $params['custom_' . E::getCHFundCustomID()] = $chFund;
