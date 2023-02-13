@@ -34,7 +34,11 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
           // always enusre that whenever a new ch_fund optionValue is created its always reserved so that it cant be deleted from UI
           $apiRequest['params']['is_reserved'] = 1;
           // Allocate newly created CH Fund option to 'General Fund'
-          $params['financial_type_id'] = civicrm_api3('FinancialType', 'getvalue', ['name' => 'General Fund', 'return' => 'id']);
+          $defaultFund = civicrm_api3('FinancialType', 'get', ['name' => 'General Fund', 'return' => 'id']);
+          if(!$defaultFund['id']) {
+            $defaultFund = civicrm_api3('FinancialType', 'get', ['name' => 'Unassigned CH Fund', 'return' => 'id']);
+          }
+          $params['financial_type_id'] = $defaultFund['id'];
         }
         // create or update OptionValueCH relationship
         civicrm_api3('OptionValueCH', 'create', $params);
