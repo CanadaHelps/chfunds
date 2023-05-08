@@ -29,6 +29,10 @@ function civicrm_api3_job_update_c_h_contributions($params) {
   $batchSize = CRM_Utils_Array::value('batch_size', $params, 1000);
   $dao = CRM_Core_DAO::executeQuery("SELECT * FROM civicrm_ch_contribution_batch LIMIT 0, $batchSize ");
   while($dao->fetch()) {
+    $lock = Civi::lockManager()->acquire("data.core.update.chcontribution." . $dao->contribution_id);
+    if (!$lock->isAcquired()) {
+      continue;
+    }
     $params = [
       'id' => $dao->contribution_id,
     ];
@@ -43,6 +47,7 @@ function civicrm_api3_job_update_c_h_contributions($params) {
     }
     civicrm_api3('Contribution', 'create', $params);
     CRM_Core_DAO::executeQuery("DELETE FROM civicrm_ch_contribution_batch WHERE id = " . $dao->id);
+    $lock->release();
   }
   return civicrm_api3_create_success();
 }
