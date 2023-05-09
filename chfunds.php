@@ -329,6 +329,20 @@ function chfunds_civicrm_postProcess($formName, &$form) {
       $optionValueCHID = E::getDefaultOptionValueCH($id)['id'];
     }
 
+    //CRM-1578-When super Admin, updates option value for CH funds from settings, when we re-assign one CH fund to any other fund , identify  OptionValueCH which has parent ID of CH fund which is going to be reassigned
+    $listofOptionValueSet =civicrm_api3('OptionValueCH', 'get', ['parent_id' => $optionValueCHID,'return' => ["id", "value"]]);
+    if(isset($listofOptionValueSet['values']))
+    {
+      foreach($listofOptionValueSet['values'] as $k=>$v)
+      { 
+        civicrm_api3('OptionValueCH', 'create', [
+          'id'=>$v['id'],
+          'value' => $v['value'],
+          'option_group_id' => $form->getVar('_gid'),
+          'financial_type_id' =>  $params['financial_type_id']
+        ]);
+      }
+    }
     civicrm_api3('OptionValueCH', 'create', [
       'id' => $optionValueCHID,
       'option_group_id' => $form->getVar('_gid'),

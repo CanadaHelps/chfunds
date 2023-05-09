@@ -60,6 +60,11 @@ class CRM_Chfunds_DAO_OptionValueCH extends CRM_Core_DAO {
   public $is_enabled_in_ch;
 
   /**
+   * @var bool
+   */
+  public $parent_id;
+
+  /**
    * Class constructor.
    */
   public function __construct() {
@@ -146,6 +151,17 @@ class CRM_Chfunds_DAO_OptionValueCH extends CRM_Core_DAO {
           'bao' => 'CRM_Chfunds_DAO_OptionValueCH',
           'localizable' => 0,
         ],
+        // Added new column 'parent_id' for data table 'civicrm_option_value_ch'
+        'parent_id' => [
+          'name' => 'parent_id',
+          'type' => CRM_Utils_Type::T_INT,
+          'description' => ts('parent id of CH option value '),
+          'where' => 'civicrm_option_value_ch.parent_id',
+          'table_name' => 'civicrm_option_value_ch',
+          'entity' => 'OptionValueCH',
+          'bao' => 'CRM_Chfunds_DAO_OptionValueCH',
+          'localizable' => 0,
+        ]
       ];
       CRM_Core_DAO_AllCoreTables::invoke(__CLASS__, 'fields_callback', Civi::$statics[__CLASS__]['fields']);
     }

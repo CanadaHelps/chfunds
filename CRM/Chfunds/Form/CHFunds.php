@@ -104,14 +104,31 @@ class CRM_Chfunds_Form_CHFunds extends CRM_Core_Form {
 
     if ($this->_financial_type_id != $values['financial_type_id'] && !empty($chFundSubmittedValues)) {
       foreach ($chFundSubmittedValues as $chFund) {
-        CRM_Core_DAO::executeQuery(" DELETE FROM civicrm_option_value_ch WHERE financial_type_id  = $this->_financial_type_id AND value = '$chFund'");
-        civicrm_api3('OptionValueCH', 'create', [
-          'option_group_id' => $gid,
-          'financial_type_id' => $values['financial_type_id'],
-          'value' => $chFund,
-          'is_enabled_in_ch' => 0,
-        ]);
-
+        //CRM-1578-From Funds page, when we assign one CH fund to any other fund , identify  OptionValueCH which has parent ID of CH fund which is going to be reassigned
+         $OVCHvaluesID = civicrm_api3('OptionValueCH', 'getsingle', ['financial_type_id' => $this->_financial_type_id,'value'=>$chFund,'return' => 'id'])['id'];
+         $listofOptionValueSet =civicrm_api3('OptionValueCH', 'get', ['parent_id' => $OVCHvaluesID,'return' => 'id']);
+         //List of CHoptionValues ,which financial_type_id value needs to be updated
+         if(isset($listofOptionValueSet['values']))
+         {
+           $listofupdateSet = array_keys($listofOptionValueSet['values']);
+         }
+         CRM_Core_DAO::executeQuery(" DELETE FROM civicrm_option_value_ch WHERE financial_type_id  = $this->_financial_type_id AND value = '$chFund'");
+          $createOptionValue =  civicrm_api3('OptionValueCH', 'create', [
+              'option_group_id' => $gid,
+              'financial_type_id' => $values['financial_type_id'],
+              'value' => $chFund,
+              'is_enabled_in_ch' => 0,
+            ]);
+            //CRM-1578- update CHOptionValues for  financial_type_id and Parent_id values
+            foreach($listofupdateSet as $k=>$v)
+            { 
+              civicrm_api3('OptionValueCH', 'create', [
+                'id'=>$v,
+                'option_group_id' => $gid,
+                'financial_type_id' => $values['financial_type_id'],
+                'parent_id' => $createOptionValue['id'],
+              ]);
+            }
         $transaction = new CRM_Core_Transaction();
         E::updateCHContribution($values['financial_type_id'], $chFund);
         $transaction->commit();

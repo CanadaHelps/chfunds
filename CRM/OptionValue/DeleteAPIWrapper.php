@@ -18,6 +18,14 @@ class CRM_OptionValue_DeleteAPIWrapper implements API_Wrapper {
         }
         else {
           foreach(civicrm_api3('OptionValueCH', 'get', ['value' => $optionValue['value']])['values'] as $value) {
+            //CRM-1578 When removal optionValue CH parent value make sure to remove child CHoptionValues
+            if(civicrm_api3('OptionValueCH', 'get', ['parent_id' => $value['id']])['values'])
+            {
+              foreach(civicrm_api3('OptionValueCH', 'get', ['parent_id' => $value['id']])['values'] as $kdel=>$vdel)
+              {
+                civicrm_api3('OptionValueCH', 'delete', ['id' => $vdel['id']]);
+              }
+            }
             civicrm_api3('OptionValueCH', 'delete', ['id' => $value['id']]);
           }
         }

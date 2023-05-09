@@ -1,5 +1,7 @@
 <?php
 use CRM_Chfunds_ExtensionUtil as E;
+use CRM_Chfunds_Utils as EC;
+use CRM_Canadahelps_ExtensionUtils as CHE;
 
 /**
  * Collection of upgrade steps.
@@ -96,6 +98,132 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
     return TRUE;
   }
 
+  public function upgrade_1800() {
+    $this->ctx->log->info('CRM-1578-[DMS] - Duplicates of CH Funds Showing Under Administer > Funds');
+    //Adding a new column 'parent_id' for dataTable `civicrm_option_value_ch`
+    $sql = "ALTER TABLE `civicrm_option_value_ch` ADD COLUMN `parent_id` INT NULL DEFAULT NULL COMMENT 'parent id of CH option value' AFTER is_enabled_in_ch";
+    CRM_Core_DAO::executeQuery($sql);
+    return TRUE;
+
+  }
+
+  public function upgrade_1810() {
+    $this->ctx->log->info('CRM-1578-[DMS] -Manage Historical CH Funds data');
+    //Get option Group ID value for 'ch_fund'
+    $optionGroups = civicrm_api4('OptionGroup', 'get', [
+      'where' => [
+        ['name', '=', 'ch_fund'],
+      ],
+    ]);
+    if($optionGroups->rowCount > 0) 
+    {
+      $optionGroupID = $optionGroups[0]['id'];
+      $fundCustomFieldID = EC::getCHFundCustomID();
+      if (civicrm_api3('OptionGroup', 'getvalue', ['id' => $optionGroupID, 'return' => 'name']) == 'ch_fund') 
+      {
+        //Identify list of duplicate CH funds
+        if($optionGroupID)
+        $optionValues = civicrm_api4('OptionValue', 'get', [
+          'select' => [
+            'name',
+            'COUNT(name)'
+          ],
+          'groupBy' => [
+            'name',
+          ],
+          'having' => [
+            ['COUNT(name)', '>', 1],
+          ],
+          'where' => [
+            ['option_group_id', '=', $optionGroupID],
+          ],
+        ]);
+        if($optionValues->rowCount > 0)
+        {
+          foreach ($optionValues as $akey=>$avalue)
+          {
+            $optionValueResult = civicrm_api4('OptionValue', 'get', [
+              'where' => [
+                ['name', '=', $avalue['name']],
+              ],
+            ]);
+            if($optionValueResult->rowCount > 0) 
+            {
+              foreach ($optionValueResult as $pkey=>$pvalue)
+              { //Identifies from list of duplicate CH fund, if any CH fund is associated with contributions
+                $count = civicrm_api3('Contribution', 'getcount', [
+                  'custom_' . $fundCustomFieldID => $pvalue['value'],
+                ]);
+                if ($count > 0)
+                { //If duplicate CH fund is associated with contributions
+                  $listOfAssociatedCHFunds = civicrm_api4('OptionValue', 'get', [
+                    'where' => [
+                      ['option_group_id', '=', $optionGroupID], 
+                      ['name', '=', $pvalue['name']],
+                    ]
+                  ]);
+                  if($listOfAssociatedCHFunds->rowCount > 0 )
+                  {
+                    $CHFundDataList =  (array) $listOfAssociatedCHFunds;
+                    $first_value = reset($CHFundDataList); // First element's value
+                    $originalCHOptionValueID =$first_value['id'] ;
+                    $originalCHOptionValueVal = $first_value['value'];
+                    //getoptionvalue CH value so we can get parent id reference and financial type id
+                    $referenceCHoptionValue = civicrm_api3('OptionValueCH', 'getsingle', [
+                      'value' => $originalCHOptionValueVal,
+                      'options' => [
+                        'limit' => 1,
+                      ],
+                    ]); 
+                    $parentalReferenceNumber = $referenceCHoptionValue['id'];
+                    $financialTypeReferenceNumber = $referenceCHoptionValue['financial_type_id'];
+                    foreach($listOfAssociatedCHFunds as $key=>$value)
+                    {
+                      if($value['id'] != $originalCHOptionValueID && $value['value'] != $originalCHOptionValueVal )
+                      {
+                        $optionValueToRemoveValue= $value['value'];
+                        $optionValueToRemoveID= $value['id'];
+                        //First fetch value for chcontribution to get id of individual contributions so we can call update ch contribution API.
+                        $getToUpdateCHoptionValue_ID= civicrm_api3('OptionValueCH', 'getsingle', [
+                          'value' => $value['value'],
+                          'option_group_id' => $optionGroupID, 
+                          'options' => [
+                            'limit' => 1,
+                          ],
+                        ])['id'];
+                        if($getToUpdateCHoptionValue_ID)
+                        $createOptionValue =  civicrm_api3('OptionValueCH', 'create', [
+                          'option_group_id' => $optionGroupID, 
+                          'financial_type_id' => $financialTypeReferenceNumber,
+                          'parent_id' => $parentalReferenceNumber,
+                          'id' => $getToUpdateCHoptionValue_ID 
+                        ]);
+                        $additionalInfoColumn = CHE::getTableNameByName('Additional_info');
+                        $fundValuecolumn = CHE::getColumnNameByName('Fund');
+                        if(isset($optionValueToRemoveValue) && ($originalCHOptionValueVal) && ($optionValueToRemoveID))
+                        {
+                          $updatenodesql = "UPDATE $additionalInfoColumn SET $fundValuecolumn = '$originalCHOptionValueVal' WHERE $fundValuecolumn = '$optionValueToRemoveValue'";
+                          CRM_Core_DAO::executeQuery($updatenodesql);
+                          CRM_Core_DAO::executeQuery(" DELETE FROM civicrm_option_value WHERE id =  $optionValueToRemoveID AND value = '$optionValueToRemoveValue'");
+                        }
+                      }
+                    }
+                  }
+                }else
+                { //remove Option values if they are not associated with any contribution
+                  foreach(civicrm_api3('OptionValue', 'get', ['value' => $pvalue['value']])['values'] as $value)
+                  {
+                    civicrm_api3('OptionValue', 'delete', ['id' => $value['id']]);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return TRUE;
+  }
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
 

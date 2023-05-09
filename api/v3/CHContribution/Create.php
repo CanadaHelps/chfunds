@@ -107,6 +107,8 @@ function civicrm_api3_c_h_contribution_Create($params) {
   }
 
   $chFund = CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
+  //CRM-1578- assign parent option value for ch_funds
+  $chFund = E::getContributionCHFundValue($chFund,$params);
   $params['financial_type_id'] = E::getFinancialTypeByCHFund($chFund);
   $params['custom_' . E::getCHFundCustomID()] = $chFund;
   return civicrm_api3('Contribution', 'create', $params);
