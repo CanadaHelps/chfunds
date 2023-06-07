@@ -13,7 +13,6 @@ class CRM_Chfunds_Utils {
   }
   //CRM-1578- create function to get orginal option value for child CH fund which can associate with contribution
   public static function getContributionCHFundValue($chFundID,$params) {
-    
     $paramData = array();
     $values = civicrm_api3('OptionValue', 'get', [
       'value' => $chFundID,
@@ -23,16 +22,15 @@ class CRM_Chfunds_Utils {
     {
       $OptionCHvalues = civicrm_api3('OptionValueCH', 'get', [
         'value' => $chFundID,
-        'sequential' => 1
-      ])['values'][0];
-      if(isset($OptionCHvalues) && !empty($OptionCHvalues))
+        'return' => ["value", "parent_id"],
+        'api.OptionValueCH.getsingle' =>  [
+          'id' => "\$value.parent_id",
+          'return' => ["value", "parent_id"],
+        ],
+      ]);
+      if(isset($OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.getsingle']) && !empty($OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.getsingle']))
       {
-        $parentID = $OptionCHvalues['parent_id'];
-        $originalCHOptionvalues = civicrm_api3('OptionValueCH', 'getsingle', ['id' => $parentID]);
-        if(isset($originalCHOptionvalues) && !empty($originalCHOptionvalues))
-        {
-          $params['ch_fund'] = $originalCHOptionvalues['value'];
-        }
+        $params['ch_fund'] = $OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.getsingle']['value'];
       }
     }
     return CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
