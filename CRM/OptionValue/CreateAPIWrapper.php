@@ -35,52 +35,25 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
           if(isset($apiRequest['params']['label']) &&!empty($apiRequest['params']['label']))
           {
             $optionValueName = $apiRequest['params']['label'];
-            $OptionCHvalues = civicrm_api3('OptionValue', 'get', [
-              'option_group_id' => $params['option_group_id'],
-              'label' =>$optionValueName,
-              'return' => ["value", "id"],
-              'api.OptionValueCH.get' =>  [
-                'value' => $apiRequest['params']['value'],
-                'options' => [
-                  'limit' => 1,
-                ],
-              ],
-            ]);
-            $firstElementKey = reset($OptionCHvalues['values']);
-            if(isset($OptionCHvalues['values']) && $OptionCHvalues['count']>= 1)
-            {
-              //duplicate value of  option value CH funds exists
-              $optionValue = $OptionCHvalues['values'][$firstElementKey['id']]['value'];
-              $optionValueID = $OptionCHvalues['values'][$firstElementKey['id']]['id'];
-
-              if(($OptionCHvalues['values'][$firstElementKey['id']]['api.OptionValueCH.get']['values']) && ($OptionCHvalues['values'][$firstElementKey['id']]['api.OptionValueCH.get']['count']>0))
-              { //Update value for optionValueCH API
-                if($OptionCHvalues['values'][$firstElementKey['id']]['api.OptionValueCH.get']['values'][0]['id'])
-                $params['id'] = $OptionCHvalues['values'][$firstElementKey['id']]['api.OptionValueCH.get']['values'][0]['id'];
-              }else{
-                //set params to Create new optionValueCH
-                $parentCHOPtionValue = civicrm_api3('OptionValueCH', 'getsingle', [
-                  'option_group_id' => $params['option_group_id'],
-                  'value' => $optionValue,
-                ]);
-                $params['financial_type_id'] = $parentCHOPtionValue['financial_type_id'];
-                $params['parent_id'] = $parentCHOPtionValue['id'];
-              }
-              //Following two params to update the option values original value
-              $apiRequest['params']['id'] = $optionValueID;
-              //$apiRequest['params']['label'] = $listOfOptionValueFunds[0]['label'];
-              $apiRequest['params']['value'] = $OptionCHvalues['values'][$firstElementKey['id']]['value'];
-
-            }else{
-               // always enusre that whenever a new ch_fund optionValue is created its always reserved so that it cant be deleted from UI
-               $apiRequest['params']['is_reserved'] = 1;
-               // Allocate newly created CH Fund option to 'General Fund'
-               $defaultFund = civicrm_api3('FinancialType', 'get', ['name' => 'General Fund', 'return' => 'id']);
-               if(!$defaultFund['id']) {
-                 $defaultFund = civicrm_api3('FinancialType', 'get', ['name' => 'Unassigned CH Fund', 'return' => 'id']);
-               }
-               $params['financial_type_id'] = $defaultFund['id'];
+            //Here we will check if fund is active or not ?
+            if(isset($apiRequest['params']['is_active'])) {
+              $optionValueActiveFund = $apiRequest['params']['is_active'];
             }
+
+            if($optionValueActiveFund) {
+              $params['label'] = $optionValueName;
+            }else{
+              $params['parent_id'] = NULL;
+            }
+
+           // always enusre that whenever a new ch_fund optionValue is created its always reserved so that it cant be deleted from UI
+           $apiRequest['params']['is_reserved'] = 1;
+           // Allocate newly created CH Fund option to 'General Fund'
+           $defaultFund = civicrm_api3('FinancialType', 'get', ['name' => 'General Fund', 'return' => 'id']);
+           if(!$defaultFund['id']) {
+             $defaultFund = civicrm_api3('FinancialType', 'get', ['name' => 'Unassigned CH Fund', 'return' => 'id']);
+           }
+           $params['financial_type_id'] = $defaultFund['id'];
           }
         }
         // create or update OptionValueCH relationship

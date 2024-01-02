@@ -39,6 +39,39 @@ class CRM_OptionValueCH_CreateAPIWrapper implements API_Wrapper {
    * alter the result before returning it to the caller.
    */
   public function toApiOutput($apiRequest, $result) {
+
+    if(isset($apiRequest['params'])) {
+      if (array_key_exists('parent_id', $apiRequest['params'])) {
+    
+      }else{
+        $parent_id = $result['id'];
+        $chFundLabelValue = $apiRequest['params']['label'];
+         $id = civicrm_api3('OptionValue', 'get', [
+          'label' => $chFundLabelValue,
+          'option_group_id' => $apiRequest['params']['option_group_id'],
+          'return' => 'value,id',
+        ]);
+        if($id['values'] && $id['count'] >0) {
+          $duplicateOptionValueData = array_column($id['values'], 'value');
+          $duplicateOptionValueID = array_column($id['values'], 'id');
+          if($duplicateOptionValueData)
+          {
+            foreach($duplicateOptionValueData as $k => $val) {
+              $values = civicrm_api3('OptionValueCH', 'getsingle', ['value' => $val, 'return' => 'id,value']);
+              $optionValueCHID = $values['id'];
+              $optionValueCHValue = $values['value'];
+              $values = civicrm_api3('OptionValueCH', 'create', ['id' => $optionValueCHID, 'parent_id' => $parent_id]);
+
+              //update value of associated contributions
+              E::updateCHContribution($apiRequest['params']['financial_type_id'], $optionValueCHValue);
+
+              //delete other Duplicate funds
+              CRM_Core_BAO_OptionValue::del($duplicateOptionValueID[$k]);
+            }
+          }
+        }
+      }
+    }
     return $result;
   }
 }
