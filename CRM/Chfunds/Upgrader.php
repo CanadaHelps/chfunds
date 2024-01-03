@@ -153,8 +153,8 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
                   CRM_Core_DAO::executeQuery($updatenodesql);
                 }
               }
-              //delete or disable duplicate funds
-              $sql = 'UPDATE `civicrm_option_value` SET `is_active`= 0 WHERE `value` = "'.$duplicateFundValue.'"';
+              //delete duplicate funds
+              $sql = 'DELETE FROM `civicrm_option_value`  WHERE `value` = "'.$duplicateFundValue.'"';
               CRM_Core_DAO::executeQuery($sql);
             }
           }

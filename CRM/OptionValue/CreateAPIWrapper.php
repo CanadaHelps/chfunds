@@ -42,6 +42,7 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
 
             if($optionValueActiveFund) {
               $params['label'] = $optionValueName;
+              $params['createOptionValCH'] = true;
             }else{
               $params['parent_id'] = NULL;
             }
