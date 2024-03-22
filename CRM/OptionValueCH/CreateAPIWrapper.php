@@ -53,21 +53,23 @@ class CRM_OptionValueCH_CreateAPIWrapper implements API_Wrapper {
         if($id['values'] && $id['count'] >0) {
           $duplicatefundToMergeID = [];
           $duplicatefundToMergeValue = [];
+          foreach($id['values'] as $index => $chfund){
 
-          //additional check if duplicate ch fund values are being assigned to any fund as parent id?
-          $getOptionValueCHFundDetails = civicrm_api3('OptionValueCH', 'get', [
-            'value' => $id['values'][$id['id']]['value'],
-            'option_group_id' => $apiRequest['params']['option_group_id'],
-            'return' => 'id'
-          ]);
-          if($getOptionValueCHFundDetails['values'] && $getOptionValueCHFundDetails['count'] >0) {
-            $duplicateFundWithParentID = civicrm_api3('OptionValueCH', 'get', [
-             'parent_id'=>$getOptionValueCHFundDetails['id'],
-             'return' => 'value,id',
+            //additional check if duplicate ch fund values are being assigned to any fund as parent id?
+            $getOptionValueCHFundDetails = civicrm_api3('OptionValueCH', 'get', [
+              'value' => $id['values'][$chfund['id']]['value'],
+              'option_group_id' => $apiRequest['params']['option_group_id'],
+              'return' => 'id'
             ]);
-            if($duplicateFundWithParentID['values'] && $duplicateFundWithParentID['count'] >0) {
-              $duplicatefundToMergeID = array_column($duplicateFundWithParentID['values'], 'id');
-              $duplicatefundToMergeValue = array_column($duplicateFundWithParentID['values'], 'value');
+            if($getOptionValueCHFundDetails['values'] && $getOptionValueCHFundDetails['count'] >0) {
+              $duplicateFundWithParentID = civicrm_api3('OptionValueCH', 'get', [
+              'parent_id'=>$getOptionValueCHFundDetails['id'],
+              'return' => 'value,id',
+              ]);
+              if($duplicateFundWithParentID['values'] && $duplicateFundWithParentID['count'] >0) {
+                $duplicatefundToMergeID = array_column($duplicateFundWithParentID['values'], 'id');
+                $duplicatefundToMergeValue = array_column($duplicateFundWithParentID['values'], 'value');
+              }
             }
           }
           $duplicateOptionValueData = array_merge(array_column($id['values'], 'value'),$duplicatefundToMergeValue);
