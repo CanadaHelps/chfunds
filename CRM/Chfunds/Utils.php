@@ -11,6 +11,30 @@ class CRM_Chfunds_Utils {
 
     return CRM_Utils_Array::value('financial_type_id', $values);
   }
+  //CRM-1578- create function to get orginal option value for child CH fund which can associate with contribution
+  public static function getContributionCHFundValue($chFundID,$params) {
+    $paramData = array();
+    $values = civicrm_api3('OptionValue', 'get', [
+      'value' => $chFundID,
+      'sequential' => 1
+    ])['values'][0];
+    if(empty($values))
+    {
+      $OptionCHvalues = civicrm_api3('OptionValueCH', 'get', [
+        'value' => $chFundID,
+        'return' => ["value", "parent_id"],
+        'api.OptionValueCH.getsingle' =>  [
+          'id' => "\$value.parent_id",
+          'return' => ["value", "parent_id"],
+        ],
+      ]);
+      if(isset($OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.getsingle']) && !empty($OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.getsingle']))
+      {
+        $params['ch_fund'] = $OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.getsingle']['value'];
+      }
+    }
+    return CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
+  }
 
 
   public static function getCHFundCustomID() {

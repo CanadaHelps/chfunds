@@ -101,12 +101,30 @@ function civicrm_api3_c_h_contribution_Create($params) {
     ]);
     if($contribution['values']) {
       $params['financial_type_id'] = $contribution['values'][0]['financial_type_id'];
-      $params[$customCHFundField] = $contribution['values'][0][$customCHFundField];
+      //CRM-1578 here we need to update based on if parent id available then asign parent id value
+      $OptionCHvalues = civicrm_api3('OptionValueCH', 'get', [
+            'value' => $contribution['values'][0][$customCHFundField],
+            'return' => ["parent_id", "id"],
+            'api.OptionValueCH.get' =>  [
+                    'id' => "\$value.parent_id",
+                    'options' => [
+                      'limit' => 1,
+                    ],
+                  ],
+          ]);
+          if($OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.get']['values'][0]['value']){
+            $params[$customCHFundField] = $OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.get']['values'][0]['value'];
+          }else{
+            $params[$customCHFundField] = $contribution['values'][0][$customCHFundField];
+          }
+
       return civicrm_api3('Contribution', 'create', $params);
     }
   }
 
   $chFund = CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
+  //CRM-1578- assign parent option value for ch_funds
+  $chFund = E::getContributionCHFundValue($chFund,$params);
   $params['financial_type_id'] = E::getFinancialTypeByCHFund($chFund);
   $params['custom_' . E::getCHFundCustomID()] = $chFund;
   return civicrm_api3('Contribution', 'create', $params);

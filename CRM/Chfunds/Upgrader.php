@@ -1,5 +1,7 @@
 <?php
 use CRM_Chfunds_ExtensionUtil as E;
+use CRM_Chfunds_Utils as EC;
+use CRM_Canadahelps_ExtensionUtils as CHE;
 
 /**
  * Collection of upgrade steps.
@@ -93,6 +95,72 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
       AND total_amount - fee_amount = net_amount";
 
     CRM_Core_DAO::executeQuery($sql);
+    return TRUE;
+  }
+
+  public function upgrade_1800() {
+    $this->ctx->log->info('CRM-1578-[DMS] - Duplicates of CH Funds Showing Under Administer > Funds');
+    //Adding a new column 'parent_id' for dataTable `civicrm_option_value_ch`
+    $sql = "ALTER TABLE `civicrm_option_value_ch` ADD COLUMN `parent_id` INT NULL DEFAULT NULL COMMENT 'parent id of CH option value' AFTER is_enabled_in_ch";
+    CRM_Core_DAO::executeQuery($sql);
+    return TRUE;
+
+  }
+
+  public function upgrade_1810() {
+    
+    //first get option group id for CHFund
+    $optionValueGroupID = CRM_Core_DAO::singleValueQuery("SELECT `id` FROM `civicrm_option_group` WHERE `name` LIKE 'ch_fund'");
+    //Get List of duplicate CH Funds from option value table
+    $sql = "SELECT name,COUNT(name) AS count , label FROM `civicrm_option_value` WHERE option_group_id= $optionValueGroupID GROUP BY name HAVING count > 1";
+    $results = CRM_Core_DAO::executeQuery($sql)->fetchAll();
+    if($results) {
+      foreach($results as $key=>$value) {
+        $labelName = $value['label'];
+        //Now check if GL Account exists or not ? (civicrm_financial_account)
+        $sql = 'SELECT * FROM `civicrm_financial_account` WHERE `name` LIKE "'.$labelName.'" ';
+        $getFinancialAccountDetails = CRM_Core_DAO::executeQuery($sql)->fetchAll();
+        if($getFinancialAccountDetails) {
+          //get list of all duplicate fund name in decending order based on label or name
+          $getListofDuplicateFunds = CRM_Core_DAO::executeQuery("SELECT value FROM `civicrm_option_value` WHERE `option_group_id` = $optionValueGroupID AND `name` LIKE '".$value['name']."' ORDER BY id DESC")->fetchAll();
+          //get first element to make it parent 
+          $getLastElementOfArray = reset($getListofDuplicateFunds);
+          $parentValueID = $getLastElementOfArray['value'];
+          $getParentCHFundDetails = CRM_Core_DAO::executeQuery("SELECT id,value,financial_type_id FROM `civicrm_option_value_ch` WHERE `option_group_id` = $optionValueGroupID AND `value`= '".$parentValueID."' LIMIT 1")->fetchAll();
+          //get parent's financial type id and id from civicrm_option_value_ch table
+          $mainParentID = $getParentCHFundDetails[0]['id'];
+          $mainParentFinancialTypeID = $getParentCHFundDetails[0]['financial_type_id'];
+  
+          //Now loop through all the duplicate fund and assign parent ID to duplicate one except parent id
+          foreach($getListofDuplicateFunds as $dupliFund) {
+            if($dupliFund['value'] !==  $parentValueID) {
+              $duplicateFundValue = $dupliFund['value'];
+              //Now update option_value ch  table with parent id for all old ch funds
+              $sql = "UPDATE civicrm_option_value_ch SET parent_id = $mainParentID WHERE  `option_group_id` = $optionValueGroupID AND value= '" . $dupliFund['value']. "'";
+              CRM_Core_DAO::executeQuery($sql);
+              // do similar thing for contributions which are associated with old funds, update fund_13 table
+              $additionalInfoColumn = CHE::getTableNameByName('Additional_info');
+              $fundValuecolumn = CHE::getColumnNameByName('Fund');
+              //first get contribution id for entity with duplicate ch fund
+              $getentityIDContributions = CRM_Core_DAO::executeQuery("SELECT entity_id FROM $additionalInfoColumn WHERE $fundValuecolumn = '".$duplicateFundValue."'")->fetchAll();
+              // do civicrm_contribution table update for financial_type_id value based on parent ch fund financial_type_id
+              if($getentityIDContributions) {
+                foreach($getentityIDContributions as $k=>$v) {
+                  $entityID = $v['entity_id'] ;
+                  $updatenodesql = "UPDATE `civicrm_contribution` SET financial_type_id = $mainParentFinancialTypeID WHERE id = $entityID";
+                  CRM_Core_DAO::executeQuery($updatenodesql);
+                  $updatenodesql = "UPDATE $additionalInfoColumn SET $fundValuecolumn = '$parentValueID' WHERE $fundValuecolumn = '$duplicateFundValue'";
+                  CRM_Core_DAO::executeQuery($updatenodesql);
+                }
+              }
+              //delete duplicate funds
+              $sql = 'DELETE FROM `civicrm_option_value`  WHERE `value` = "'.$duplicateFundValue.'"';
+              CRM_Core_DAO::executeQuery($sql);
+            }
+          }
+        }
+      }
+    }
     return TRUE;
   }
 
