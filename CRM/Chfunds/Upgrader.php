@@ -111,25 +111,38 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
     
     //first get option group id for CHFund
     $optionValueGroupID = CRM_Core_DAO::singleValueQuery("SELECT `id` FROM `civicrm_option_group` WHERE `name` LIKE 'ch_fund'");
-    //Get List of duplicate CH Funds from option value table
-    $sql = "SELECT name,COUNT(name) AS count , label FROM `civicrm_option_value` WHERE option_group_id= $optionValueGroupID GROUP BY name HAVING count > 1";
+    //Get List of duplicate CH Funds from option value table when multiple CH funds mapped under same fund name
+    $sql = "SELECT opv.name, COUNT(opv.name) AS count, opv.label, opch.financial_type_id 
+      FROM `civicrm_option_value` opv 
+      LEFT JOIN `civicrm_option_value_ch` opch ON opv.value = opch.value 
+      WHERE opv.option_group_id = $optionValueGroupID  
+      GROUP BY opv.name,opch.financial_type_id 
+      HAVING count > 1";
     $results = CRM_Core_DAO::executeQuery($sql)->fetchAll();
     if($results) {
       foreach($results as $key=>$value) {
         $labelName = $value['label'];
+        $fundID = $value['financial_type_id'];
         //Now check if GL Account exists or not ? (civicrm_financial_account)
-        $sql = 'SELECT * FROM `civicrm_financial_account` WHERE `name` LIKE "'.$labelName.'" ';
+        $sql = 'SELECT fa.id,efa.entity_id FROM `civicrm_financial_account` as fa 
+              LEFT JOIN `civicrm_entity_financial_account` as efa 
+              ON fa.id = efa.financial_account_id
+              WHERE fa.name LIKE "'.$labelName.'" AND efa.entity_id='.$fundID;
         $getFinancialAccountDetails = CRM_Core_DAO::executeQuery($sql)->fetchAll();
         if($getFinancialAccountDetails) {
           //get list of all duplicate fund name in decending order based on label or name
-          $getListofDuplicateFunds = CRM_Core_DAO::executeQuery("SELECT value FROM `civicrm_option_value` WHERE `option_group_id` = $optionValueGroupID AND `name` LIKE '".$value['name']."' ORDER BY id DESC")->fetchAll();
+          $getListofDuplicateFunds = CRM_Core_DAO::executeQuery("SELECT opch.*
+              FROM `civicrm_option_value` opv 
+              INNER JOIN `civicrm_option_value_ch` opch
+              ON opv.value = opch.value
+              WHERE opv.option_group_id = $optionValueGroupID AND opv.name LIKE '".$value['name']."' AND opch.financial_type_id=$fundID 
+              ORDER BY opv.id DESC")->fetchAll();
           //get first element to make it parent 
           $getLastElementOfArray = reset($getListofDuplicateFunds);
           $parentValueID = $getLastElementOfArray['value'];
-          $getParentCHFundDetails = CRM_Core_DAO::executeQuery("SELECT id,value,financial_type_id FROM `civicrm_option_value_ch` WHERE `option_group_id` = $optionValueGroupID AND `value`= '".$parentValueID."' LIMIT 1")->fetchAll();
           //get parent's financial type id and id from civicrm_option_value_ch table
-          $mainParentID = $getParentCHFundDetails[0]['id'];
-          $mainParentFinancialTypeID = $getParentCHFundDetails[0]['financial_type_id'];
+          $mainParentID = $getLastElementOfArray['id'];
+          $mainParentFinancialTypeID = $getLastElementOfArray['financial_type_id'];
   
           //Now loop through all the duplicate fund and assign parent ID to duplicate one except parent id
           foreach($getListofDuplicateFunds as $dupliFund) {
