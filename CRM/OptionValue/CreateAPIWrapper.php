@@ -103,6 +103,7 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
               'label' => $option_value_name
             ];
             $apiRequest['params']= $newParams;
+            $apiRequest['function']= 'civicrm_api3_option_value_get';
           }
         }
         // create or update OptionValueCH relationship
