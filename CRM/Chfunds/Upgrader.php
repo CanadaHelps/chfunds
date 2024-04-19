@@ -116,11 +116,6 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
     $results = CRM_Core_DAO::executeQuery($sql)->fetchAll();
     if($results) {
       foreach($results as $key=>$value) {
-        $labelName = $value['label'];
-        //Now check if GL Account exists or not ? (civicrm_financial_account)
-        $sql = 'SELECT * FROM `civicrm_financial_account` WHERE `name` LIKE "'.$labelName.'" ';
-        $getFinancialAccountDetails = CRM_Core_DAO::executeQuery($sql)->fetchAll();
-        if($getFinancialAccountDetails) {
           //get list of all duplicate fund name in decending order based on label or name
           $getListofDuplicateFunds = CRM_Core_DAO::executeQuery("SELECT value FROM `civicrm_option_value` WHERE `option_group_id` = $optionValueGroupID AND `name` LIKE '".$value['name']."' ORDER BY id DESC")->fetchAll();
           //get first element to make it parent 
@@ -158,7 +153,6 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
               CRM_Core_DAO::executeQuery($sql);
             }
           }
-        }
       }
     }
     return TRUE;
