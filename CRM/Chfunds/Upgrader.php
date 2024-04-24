@@ -116,8 +116,9 @@ class CRM_Chfunds_Upgrader extends CRM_Chfunds_Upgrader_Base {
     $results = CRM_Core_DAO::executeQuery($sql)->fetchAll();
     if($results) {
       foreach($results as $key=>$value) {
+          $fundName = addslashes($value['name']);
           //get list of all duplicate fund name in decending order based on label or name
-          $getListofDuplicateFunds = CRM_Core_DAO::executeQuery("SELECT value FROM `civicrm_option_value` WHERE `option_group_id` = $optionValueGroupID AND `name` LIKE '".$value['name']."' ORDER BY id DESC")->fetchAll();
+          $getListofDuplicateFunds = CRM_Core_DAO::executeQuery("SELECT value FROM `civicrm_option_value` WHERE `option_group_id` = $optionValueGroupID AND `name` LIKE '".$fundName."' ORDER BY id DESC")->fetchAll();
           //get first element to make it parent 
           $getLastElementOfArray = reset($getListofDuplicateFunds);
           $parentValueID = $getLastElementOfArray['value'];
