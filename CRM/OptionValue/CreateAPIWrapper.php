@@ -29,6 +29,9 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
             ],
           ])['id'];
           $params['id'] = $OVCHid;
+
+          //update OptionValueCH relationship as API param has id
+          civicrm_api3('OptionValueCH', 'create', $params);
         }
         else {
           $duplicateOptionValue = false;
@@ -46,52 +49,73 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
             if(isset($apiRequest['params']['is_active'])) {
               $optionValueActiveFund = $apiRequest['params']['is_active'];
             }
-
-            if($optionValueActiveFund) {
-              $params['label'] = $optionValueName;
-              $params['createOptionValCH'] = true;
+            //check value param already existing in civicrm_option_value_ch table
+            //-if exist return assosciated chfund detail (don't create new chfund)
+            //-if doesn't exist look into civicrm_option_value table by label param 
+            $sql = "SELECT chfund.value fund, parent_fund.value parent_chfund, option_value.name, option_value.id,
+                    option_value.label, option_value.value matched_fund
+                  FROM civicrm_option_value_ch chfund
+                  LEFT JOIN civicrm_option_value_ch parent_fund ON parent_fund.id = chfund.parent_id
+                  LEFT JOIN civicrm_option_value option_value ON option_value.value IN (chfund.value,parent_fund.value)
+                  WHERE
+                  chfund.value = '".$apiRequest['params']['value']."'";
+            $results = CRM_Core_DAO::executeQuery($sql)->fetchAll();
               
-              //check if duplicate OptionValue present with the same label
-              $id = civicrm_api3('OptionValue', 'get', [
-                'label' => $optionValueName,
-                'option_group_id' => $apiRequest['params']['option_group_id'],
-                'return' => 'value,id',
-              ]);
-              if($id['values'] && $id['count'] >0) {
-                foreach($id['values'] as $index => $chfund){
-                  $option_group_id = $apiRequest['params']['option_group_id'];
-                  //fetch OptionValueCH fund  which is a parent ch fund and newly created OptionValueCH fund would have this same parent
-                  $getOptionValueCHFundDetails = civicrm_api3('OptionValueCH', 'get', [
-                    'value' => $id['values'][$chfund['id']]['value'],
-                    'option_group_id' => is_int($option_group_id) ? $option_group_id : civicrm_api3('OptionGroup', 'getvalue', ['name' => 'ch_fund', 'return' => 'id']),
-                    'parent_id' => ['IS NULL' => 1],
-                    'return' => 'id,financial_type_id'
-                  ]);
-                  
-                  if($getOptionValueCHFundDetails['values'] && $getOptionValueCHFundDetails['count'] >0) {
-                    //Assigning parent_id,financial_type_id to this newly to be created OptionValueCH fund 
-                    $params['financial_type_id'] = $getOptionValueCHFundDetails['values'][$getOptionValueCHFundDetails['id']]['financial_type_id'];
-                    $params['parent_id'] = $getOptionValueCHFundDetails['id'];
-
-                    $duplicateOptionValue = true;
-                    $alreadyExistingFundId = $chfund['id'];
-                  }
-                }
+            if($results) {
+              foreach($results as $key=>$value) {
+                $option_value_label = $value['label'];
+                $alreadyExistingFundId = $value['id'];
+                $duplicateOptionValue = true;
               }
             }else{
-              $params['parent_id'] = NULL;
-            }
+              if($optionValueActiveFund) {
+                $params['label'] = $optionValueName;
+                $params['createOptionValCH'] = true;
 
+                //check if duplicate OptionValue present with the same label
+                $id = civicrm_api3('OptionValue', 'get', [
+                  'label' => $optionValueName,
+                  'option_group_id' => $apiRequest['params']['option_group_id'],
+                  'return' => 'value,id',
+                ]);
+                if($id['values'] && $id['count'] >0) {
+                  foreach($id['values'] as $index => $chfund){
+                    $option_group_id = $apiRequest['params']['option_group_id'];
+                    //fetch OptionValueCH fund  which is a parent ch fund and newly created OptionValueCH fund would have this same parent
+                    $getOptionValueCHFundDetails = civicrm_api3('OptionValueCH', 'get', [
+                      'value' => $id['values'][$chfund['id']]['value'],
+                      'option_group_id' => is_int($option_group_id) ? $option_group_id : civicrm_api3('OptionGroup', 'getvalue', ['name' => 'ch_fund', 'return' => 'id']),
+                      'parent_id' => ['IS NULL' => 1],
+                      'return' => 'id,financial_type_id'
+                    ]);
+                    
+                    if($getOptionValueCHFundDetails['values'] && $getOptionValueCHFundDetails['count'] >0) {
+                      //Assigning parent_id,financial_type_id to this newly to be created OptionValueCH fund 
+                      $params['financial_type_id'] = $getOptionValueCHFundDetails['values'][$getOptionValueCHFundDetails['id']]['financial_type_id'];
+                      $params['parent_id'] = $getOptionValueCHFundDetails['id'];
+
+                      $duplicateOptionValue = true;
+                      $alreadyExistingFundId = $chfund['id'];
+                      $option_value_label = $apiRequest['params']['label'];
+                    }
+                  }
+                }
+              }else{
+                $params['parent_id'] = NULL;
+              }
+              
+              // create OptionValueCH relationship
+              civicrm_api3('OptionValueCH', 'create', $params);
+            }
            // always enusre that whenever a new ch_fund optionValue is created its always reserved so that it cant be deleted from UI
            $apiRequest['params']['is_reserved'] = 1;
           }
-          //If OptionValue is alreadt exist , we prevent this createAPI and change action to get and provide alredy existing optionValue data
+          //If OptionValue is already exist , we prevent this createAPI and change action to get and provide alredy existing optionValue data
           if($duplicateOptionValue === true)
           {
             $apiRequest['action'] = 'get';
             $version_value = $apiRequest['params']['version'];
             $option_group_id = $apiRequest['params']['option_group_id'];
-            $option_value_name = $apiRequest['params']['label'];
             unset($apiRequest['params']);
             $newParams = [
               'id' => $alreadyExistingFundId,
@@ -100,14 +124,12 @@ class CRM_OptionValue_CreateAPIWrapper implements API_Wrapper {
               'option_group_id' => $option_group_id,
               'prettyprint' => 1,
               'check_permissions' => 1,
-              'label' => $option_value_name
+              'label' => $option_value_label
             ];
             $apiRequest['params']= $newParams;
             $apiRequest['function']= 'civicrm_api3_option_value_get';
           }
         }
-        // create or update OptionValueCH relationship
-        civicrm_api3('OptionValueCH', 'create', $params);
       }
     }
     return $apiRequest;
