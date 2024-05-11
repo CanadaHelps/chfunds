@@ -13,5 +13,6 @@ return array(
       'is_reserved' => 1,
       'is_deductible' => 0,
     ),
+    'update' => 'never'
   ),
 );
