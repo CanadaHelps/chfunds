@@ -14,8 +14,8 @@
     <url desc="Support">https://github.com/JMAConsulting/chfunds/issues</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2024-05-02</releaseDate>
-  <version>1.8.2</version>
+  <releaseDate>2024-05-13</releaseDate>
+  <version>1.8.3</version>
   <develStage>alpha</develStage>
   <compatibility>
     <ver>5.20</ver>
