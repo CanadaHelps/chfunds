@@ -60,7 +60,7 @@ class CRM_Chfunds_DAO_OptionValueCH extends CRM_Core_DAO {
   public $is_enabled_in_ch;
 
   /**
-   * @var bool
+   * @var int
    */
   public $parent_id;
 
@@ -83,6 +83,7 @@ class CRM_Chfunds_DAO_OptionValueCH extends CRM_Core_DAO {
       Civi::$statics[__CLASS__]['links'] = static::createReferenceColumns(__CLASS__);
       Civi::$statics[__CLASS__]['links'][] = new CRM_Core_Reference_Basic(self::getTableName(), 'option_group_id', 'civicrm_option_group', 'id');
       Civi::$statics[__CLASS__]['links'][] = new CRM_Core_Reference_Basic(self::getTableName(), 'financial_type_id', 'civicrm_financial_type', 'id');
+      Civi::$statics[__CLASS__]['links'][] = new CRM_Core_Reference_Basic(self::getTableName(), 'parent_id', 'civicrm_option_value_ch', 'id');
       CRM_Core_DAO_AllCoreTables::invoke(__CLASS__, 'links_callback', Civi::$statics[__CLASS__]['links']);
     }
     return Civi::$statics[__CLASS__]['links'];
