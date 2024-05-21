@@ -12,7 +12,7 @@ class CRM_Chfunds_Utils {
     return CRM_Utils_Array::value('financial_type_id', $values);
   }
   //CRM-1578- create function to get orginal option value for child CH fund which can associate with contribution
-  public static function getContributionCHFundValue(int $chFundID, array $params) {
+  public static function getContributionCHFundValue(string $chFundID, array $params) {
     $optionValue = \Civi\Api4\OptionValue::get(FALSE)
       ->addWhere('value', '=', $chFundID)
       ->execute()
