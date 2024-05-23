@@ -1,5 +1,6 @@
 <?php
 use CRM_Chfunds_Utils as E;
+use CRM_Canadahelps_Contributions as Contributions;
 
 /**
  * ChContribution.Create API specification (optional)
@@ -93,39 +94,32 @@ function _civicrm_api3_c_h_contribution_Create_spec(&$params) {
  */
 function civicrm_api3_c_h_contribution_Create($params) {
   if(isset($params['id'])) {
-    $customCHFundField = 'custom_' . E::getCHFundCustomID();
-    $contribution = civicrm_api3('Contribution', 'get', [
-      'return' => ["financial_type_id", $customCHFundField],
-      'sequential' => 1,
-      'id' => $params['id'],
-    ]);
-    if($contribution['values']) {
-      $params['financial_type_id'] = $contribution['values'][0]['financial_type_id'];
-      //CRM-1578 here we need to update based on if parent id available then asign parent id value
-      $OptionCHvalues = civicrm_api3('OptionValueCH', 'get', [
-            'value' => $contribution['values'][0][$customCHFundField],
-            'return' => ["parent_id", "id"],
-            'api.OptionValueCH.get' =>  [
-                    'id' => "\$value.parent_id",
-                    'options' => [
-                      'limit' => 1,
-                    ],
-                  ],
-          ]);
-          if($OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.get']['values'][0]['value']){
-            $params[$customCHFundField] = $OptionCHvalues['values'][$OptionCHvalues['id']]['api.OptionValueCH.get']['values'][0]['value'];
-          }else{
-            $params[$customCHFundField] = $contribution['values'][0][$customCHFundField];
-          }
-
+    $contribution = \Civi\Api4\Contribution::get(TRUE)
+      ->addSelect('financial_type_id', 'Additional_info.Fund')
+      ->addWhere('id', '=', $params['id'])
+      ->execute()
+      ->first();
+    if ($contribution) {
+      $params['financial_type_id'] = $contribution['financial_type_id'];
+      
+      // Get correct fund information, whether it has a parent or not
+      $chFundInfo = Contributions::getActualFundInfo($contribution['Additional_info.Fund']);
+      if ( !empty($chFundInfo['financial_type_id']) ) {
+        $params['financial_type_id'] = $chFundInfo['financial_type_id'];
+        $params[$chFundInfo['fund_field']] = $chFundInfo['fund_value'];
+      }
       return civicrm_api3('Contribution', 'create', $params);
     }
   }
 
   $chFund = CRM_Utils_Array::value('ch_fund', $params, CRM_Utils_Array::value('ch_fund_id', $params));
-  //CRM-1578- assign parent option value for ch_funds
-  $chFund = E::getContributionCHFundValue($chFund,$params);
-  $params['financial_type_id'] = E::getFinancialTypeByCHFund($chFund);
-  $params['custom_' . E::getCHFundCustomID()] = $chFund;
+  
+  // Get correct fund information, whether it has a parent or not
+  $chFundInfo = Contributions::getActualFundInfo($chFund);
+  if ( !empty($chFundInfo['financial_type_id']) ) {
+    $params['financial_type_id'] = $chFundInfo['financial_type_id'];
+    $params[$chFundInfo['fund_field']] = $chFundInfo['fund_value'];
+  }
+
   return civicrm_api3('Contribution', 'create', $params);
 }
